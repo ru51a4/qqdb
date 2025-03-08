@@ -103,9 +103,14 @@ export default class mysql {
                     let left = _query.whereClauses[j].left;
                     left = el[left];
                     let right = _query.whereClauses[j].right;
-                    if (_query.whereClauses[j].type == "IN") {
-                        right = [...mysql._query(right).map((c) => Object.values(c)[0])];
-                        if (!right.includes(left)) {
+
+                    if (right.fn == "IN" || _query.whereClauses[j].type == "IN") {
+                        if (right.fn !== "IN") {
+                            right = [...mysql._query(right).map((c) => String(Object.values(c)[0]))];
+                        } else {
+                            right = right.args
+                        }
+                        if (!right.includes(String(left))) {
                             return 0;
                         }
                     } else {
