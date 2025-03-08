@@ -30,7 +30,7 @@ export default class mysql {
     static query(str) {
         return mysql._query(SimpleSqlParserJs.build(str)[0]);
     }
-    static _query(tt) {
+    static _query(tt, prev) {
         let operation = [];
         operation["<"] = (a, b) => {
             return a < b;
@@ -100,13 +100,14 @@ export default class mysql {
             }
             rrow = rrow.filter((el) => {
                 for (let j = 0; j <= _query.whereClauses.length - 1; j++) {
+
                     let left = _query.whereClauses[j].left;
                     left = el[left];
                     let right = _query.whereClauses[j].right;
 
                     if (right.fn == "IN" || _query.whereClauses[j].type == "IN") {
                         if (right.fn !== "IN") {
-                            right = [...mysql._query(right).map((c) => String(Object.values(c)[0]))];
+                            right = [...mysql._query(right, el).map((c) => String(Object.values(c)[0]))];
                         } else {
                             right = right.args
                         }
@@ -114,7 +115,7 @@ export default class mysql {
                             return 0;
                         }
                     } else {
-                        if (!operation[_query.whereClauses[j].type](left, right)) {
+                        if (!operation[_query.whereClauses[j].type](left, prev[right] ?? right)) {
                             return 0;
                         }
                     }
