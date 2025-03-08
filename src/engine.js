@@ -103,15 +103,36 @@ export default class mysql {
                     let left = _query.whereClauses[j].left;
                     left = el[left];
                     let right = _query.whereClauses[j].right;
-                    if (!operation[_query.whereClauses[j].type](left, right)) {
-                        return 0;
+                    if (_query.whereClauses[j].type == "IN") {
+                        right = [...mysql._query(right).map((c) => Object.values(c)[0])];
+                        if (!right.includes(left)) {
+                            return 0;
+                        }
+                    } else {
+                        if (!operation[_query.whereClauses[j].type](left, right)) {
+                            return 0;
+                        }
                     }
+
                 }
                 return 1;
             });
             //
             res.push(...rrow);
         }
+        //one col
+        let COL = null;
+
+        if (_query.columns[0].col != "*" && _query.columns.length == 1) {
+            let __res = [];
+            for (let i = 0; i <= res.length - 1; i++) {
+                __res[i] = {};
+                __res[i][_query.columns[0].col] = res[i][_query.columns[0].col];
+            }
+            res = __res
+        }
+
+
         //group by
         if (_query.groupByColumns.length) {
             let grrow = [];
@@ -137,6 +158,7 @@ export default class mysql {
                 }
             }
             res = [...grrow.filter((c) => c)];
+
             for (let i = 0; i <= res.length - 1; i++) {
                 let length = res[i].length;
                 if (maxCol) {
