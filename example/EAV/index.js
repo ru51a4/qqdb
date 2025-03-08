@@ -67,7 +67,7 @@ let filter = mysql.query(`
 console.log("")
 console.log('filtred:')
 filter.forEach((item, i) => {
-    console.log(`#${item['EL.ID']} - "${item['EL.NAME']}"`)
+    console.log(`#${item['EL.ID']} - "${item['EL.NAME']}`)
 });
 
 //get all attribute by iblock id

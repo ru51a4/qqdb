@@ -8,31 +8,7 @@ function uuidv4() {
 
 
 export default class mysql {
-    static table = {
-        "POSTS": {
-            col: ['ID', 'MSG', 'USER_ID', 'DIARY_ID'],
-            data: [
-                [1, "Мой блог о php", 1, 1],
-                [2, "Как дела?", 2, 1],
-                [3, "Мой уютный блог обо всем на свете", 2, 2],
-                [4, "Сегодня хорошая погода", 2, 2],
-            ],
-        },
-        "USERS": {
-            col: ["ID", "LOGIN", "STATUS"],
-            data: [
-                [1, "admin", 1],
-                [2, "user", 3],
-            ]
-        },
-        "DIARY": {
-            col: ["ID", "NAME", "USER_ID"],
-            data: [
-                [1, "php и рефлексия", 2],
-                [2, "уютный бложик", 1],
-            ]
-        }
-    };
+    static table = {};
 
     static query(str) {
         return mysql._query(SimpleSqlParserJs.build(str)[0]);
@@ -113,7 +89,6 @@ export default class mysql {
                     let left = _query.whereClauses[j].left;
                     left = el[left] ?? _query.whereClauses[j].left;
                     let right = _query.whereClauses[j].right;
-
                     if (right.fn == "IN" || _query.whereClauses[j].type == "IN") {
                         if (right.fn !== "IN") {
                             let t = mysql._query(right, el);
@@ -229,7 +204,7 @@ export default class mysql {
             obj[_col] = r.data[j][i];
         }
         for (let j = 0; j <= columns.length - 1; j++) {
-            if (!columns[j].col.includes('.')) {
+            if (typeof columns[j].col == 'string' && !columns[j].col.includes('.')) {
                 obj['_.' + uuidv4()] = columns[j].col;
             }
         }

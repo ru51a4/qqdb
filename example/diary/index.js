@@ -47,7 +47,7 @@ let blog1 = mysql.query(`
         SELECT * FROM posts p
         JOIN diary d on p.diary_id = d.id  
         JOIN users u on p.user_id = u.id
-        WHERE d.id IN (SELECT dd.id FROM diary dd WHERE dd.id = d.id and dd.id = 1)
+        WHERE 1 IN (SELECT 1 FROM diary dd WHERE dd.id = d.id and dd.id = 1)
         ORDER BY p.id ASC
     `);
 console.log("")
