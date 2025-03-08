@@ -44,6 +44,9 @@ export default class mysql {
                 if (typeof _query.joins[j].table === "object") {
                     mysql.table[ja] = {};
                     let subquery = mysql._query(_query.joins[j].table, row);
+                    if (!subquery.length) {
+                        return;
+                    }
                     mysql.table[ja].col = Object.keys(subquery[0]).map(c => c.split(".")[1]);
                     mysql.table[ja].data = subquery.map((c) => Object.values(c));
                     aliasTable[ja] = ja;
