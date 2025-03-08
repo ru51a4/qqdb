@@ -157,16 +157,16 @@ export default class mysql {
                 }
             });
             //
-            for (let i = 0; i <= _query.groupByColumns.length - 1; i++) {
-                for (let j = 0; j <= res.length - 1; j++) {
-                    if (!grrow[res[j][_query.groupByColumns[i].col]]) {
-                        grrow[res[j][_query.groupByColumns[i].col]] = [];
-                    }
-                    grrow[res[j][_query.groupByColumns[i].col]].push(res[j]);
+            for (let j = 0; j <= res.length - 1; j++) {
+                let key = _query.groupByColumns.reduce((acc, a) => {
+                    return acc + a.col + '-' + "(" + res[j][a.col] + ")"
+                }, '')
+                if (!grrow[key]) {
+                    grrow[key] = [];
                 }
+                grrow[key].push(res[j]);
             }
-            res = [...grrow.filter((c) => c)];
-
+            res = [...Object.values(grrow).filter((c) => c)];
             for (let i = 0; i <= res.length - 1; i++) {
                 let length = res[i].length;
                 if (maxCol) {

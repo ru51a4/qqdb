@@ -15,6 +15,8 @@ mysql.table = {
         data: [
             [1, 'Домашние Тапочки Розовый Рай', 3],
             [2, 'Домашние Тапочки Любимый Спорт', 3],
+            [3, 'test group by', 3],
+
         ],
     },
     "IBLOCK_PROPERTIES": {
@@ -31,9 +33,12 @@ mysql.table = {
             [2, '174-16-xx', 0, 1, 2],
             [3, 'резина/кожа', 0, 2, 1],
             [4, 'текстиль/полимер', 0, 2, 2],
+            [5, '174-15-xx', 0, 1, 3],
+            [5, '174-15-xx', 0, 2, 3],
         ],
     },
 };
+
 //get list
 let items = mysql.query(`
     SELECT * FROM iblock_elements el  
@@ -59,4 +64,15 @@ let filter = mysql.query(`
 console.log('')
 filter.forEach((item, i) => {
     console.log(`${item['EL.NAME']}`)
+});
+
+//get all attribute by iblock id
+console.log("")
+let attr = mysql.query(`
+    SELECT * FROM iblock_properties ip JOIN iblock_prop_value pv ON ip.id = pv.prop_id 
+    WHERE ip.iblock_id IN (1,2,3)
+    GROUP BY pv.value, ip.id
+`)
+attr.forEach((el) => {
+    console.log(`✅ ${el['IP.NAME']} - "${el['PV.VALUE']}"`)
 });
