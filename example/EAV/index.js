@@ -40,6 +40,7 @@ mysql.table = {
 };
 
 //get list
+console.log("catalog:")
 let items = mysql.query(`
     SELECT * FROM iblock_elements el  
         JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
@@ -53,21 +54,25 @@ items.forEach((item, i) => {
     prev = item['EL.NAME'];
     console.log(`${item['EL.NAME']}: ${item['IP.NAME']} -> ${item['SPV.VALUE']}`)
 });
+
 //filter
 let filter = mysql.query(`
     SELECT * FROM iblock_elements el  
         JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
-        WHERE el.id IN (SELECT f.el_id FROM iblock_prop_value f WHERE f.el_id = el.id AND f.prop_id = 1 AND f.value = '174-16-xx')
-        AND el.id IN (SELECT f.el_id FROM iblock_prop_value f WHERE f.el_id = el.id AND f.prop_id = 2 AND f.value = 'текстиль/полимер')
+        WHERE 1 = 1
+        AND 1 IN (SELECT 1 FROM iblock_prop_value f WHERE f.el_id = el.id AND f.prop_id = 1 AND f.value = '174-16-xx')
+        AND 1 IN (SELECT 1 FROM iblock_prop_value f WHERE f.el_id = el.id AND f.prop_id = 2 AND f.value = 'текстиль/полимер')
         GROUP BY el.id
 `)
-console.log('')
+console.log("")
+console.log('filtred:')
 filter.forEach((item, i) => {
-    console.log(`${item['EL.NAME']}`)
+    console.log(`#${item['EL.ID']} - "${item['EL.NAME']}"`)
 });
 
 //get all attribute by iblock id
 console.log("")
+console.log("attr:")
 let attr = mysql.query(`
     SELECT * FROM iblock_properties ip JOIN iblock_prop_value pv ON ip.id = pv.prop_id 
     WHERE ip.iblock_id IN (1,2,3)

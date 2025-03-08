@@ -1,5 +1,12 @@
 import SimpleSqlParserJs from "./parser.js"
 
+function uuidv4() {
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+        (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+    );
+}
+
+
 export default class mysql {
     static table = {
         "POSTS": {
@@ -104,12 +111,16 @@ export default class mysql {
                 for (let j = 0; j <= _query.whereClauses.length - 1; j++) {
 
                     let left = _query.whereClauses[j].left;
-                    left = el[left];
+                    left = el[left] ?? _query.whereClauses[j].left;
                     let right = _query.whereClauses[j].right;
 
                     if (right.fn == "IN" || _query.whereClauses[j].type == "IN") {
                         if (right.fn !== "IN") {
-                            right = [...mysql._query(right, el).map((c) => String(Object.values(c)[0]))];
+                            let t = mysql._query(right, el);
+                            right = [];
+                            for (let l = 0; l <= t.length - 1; l++) {
+                                right.push(...Object.values(t[l]))
+                            }
                         } else {
                             right = right.args
                         }
@@ -131,7 +142,7 @@ export default class mysql {
         //one col
         let COL = null;
 
-        if (_query.columns[0].col != "*" && _query.columns.length == 1) {
+        if (_query.columns[0].col.includes(".") && _query.columns[0].col != "*" && _query.columns.length == 1) {
             let __res = [];
             for (let i = 0; i <= res.length - 1; i++) {
                 __res[i] = {};
@@ -203,7 +214,6 @@ export default class mysql {
         for (let i = 0; i <= r.col.length - 1; i++) {
             let _col = alias ? alias + '.' + r.col[i] : "" + r.col[i];
             for (let j = 0; j <= columns.length - 1; j++) {
-
                 let getCol = (obj) => {
                     if (obj.col.args) {
                         return obj.col.args[0];
@@ -217,6 +227,11 @@ export default class mysql {
                 }
             }
             obj[_col] = r.data[j][i];
+        }
+        for (let j = 0; j <= columns.length - 1; j++) {
+            if (!columns[j].col.includes('.')) {
+                obj['_.' + uuidv4()] = columns[j].col;
+            }
         }
         return obj;
     }
