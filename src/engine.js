@@ -39,6 +39,9 @@ export default class mysql {
             return a > b;
         }
         operation["="] = (a, b) => {
+            if (typeof a == 'string') {
+                return a.split("'").join("").toUpperCase() == b.split("'").join("").toUpperCase();
+            }
             return a == b;
         }
         operation["<>"] = (a, b) => {
@@ -55,10 +58,9 @@ export default class mysql {
                 let jf = true;
                 let jt = _query.joins[j].table
                 let ja = _query.joins[j].alias;
-
                 if (typeof _query.joins[j].table === "object") {
                     mysql.table[ja] = {};
-                    let subquery = mysql._query(_query.joins[j].table);
+                    let subquery = mysql._query(_query.joins[j].table, row);
                     mysql.table[ja].col = Object.keys(subquery[0]).map(c => c.split(".")[1]);
                     mysql.table[ja].data = subquery.map((c) => Object.values(c));
                     aliasTable[ja] = ja;
@@ -80,7 +82,7 @@ export default class mysql {
                         if (_query.joins.length - 1 == j) {
                             rrow.push(__row);
                             rrow.alias = ja
-                        } else if (_query.joins.length - 1 <= j + 1) {
+                        } else if (_query.joins.length - 1 - j > 0) {
                             join(__row, j + 1)
                         }
                     }
@@ -115,7 +117,7 @@ export default class mysql {
                             return 0;
                         }
                     } else {
-                        if (!operation[_query.whereClauses[j].type](left, prev[right] ?? right)) {
+                        if (!operation[_query.whereClauses[j].type](left, (prev && prev[right]) ? prev[right] : right)) {
                             return 0;
                         }
                     }
