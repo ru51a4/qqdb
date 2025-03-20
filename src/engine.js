@@ -88,13 +88,13 @@ export default class mysql {
             }
             rrow = rrow.filter((el) => {
 
-                let asdasd = (arr) => {
+                let deep = (arr) => {
                     for (let j = 0; j <= arr.length - 1; j++) {
                         let left = arr[j].left;
                         left = el[left] ?? arr[j].left;
                         let right = arr[j].right;
                         if (arr[j]?.next?._val) {
-                            arr[j].val = asdasd(arr[j]?.next?._val);
+                            arr[j].val = deep(arr[j]?.next?._val);
                         }
                         else if (right.fn == "IN" || arr[j].type == "IN") {
                             if (right.fn !== "IN") {
@@ -145,7 +145,7 @@ export default class mysql {
                     }
                     return expp[0] ?? 1;
                 }
-                return asdasd(_query.whereClauses)
+                return deep(_query.whereClauses)
 
             });
             //
