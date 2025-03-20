@@ -55,5 +55,4 @@ console.log(`======START:${blog1[0]["D.NAME"]}======`)
 blog1.forEach((el) => {
     console.log(`#${el['P.ID']} ${el['P.MSG']} [by ${el['U.LOGIN']}]`)
 });
-
-console.log(mysql.query(`SELECT * FROM diary d WHERE 1 = 0 OR (1 = 1 AND d.id = 1)`));
+console.log(mysql.query(`SELECT * FROM diary d WHERE 1 = 0 OR (1 = 1 AND (1 = 1 AND d.id = 1))`)); 

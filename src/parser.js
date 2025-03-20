@@ -181,10 +181,18 @@ export default class SimpleSqlParserJs {
                     if (next?.fn == 'AND' || next?.fn == 'OR') {
                         let a = deep(next.args)
                         next = { _val: a.t, t_fn: next.fn }
+                        if (next) {
+                            //shiiit
+                            t.push({ "next": next.t_fn, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
+                            t.push({ "next": next, "left": arr[i], 'right': arr[i + 2], 'type': "=" })
+                            i++
+                            continue
+                        }
+
+                        //todo
                         if (!arr[i + 4]?.fn) {
                             _next = arr[i + 4];
                         }
-                        i++
                     }
 
                     if (arr[i + 1].fn === 'IN') {
