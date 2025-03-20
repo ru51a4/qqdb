@@ -87,32 +87,66 @@ export default class mysql {
                 rrow.push(row);
             }
             rrow = rrow.filter((el) => {
-                for (let j = 0; j <= _query.whereClauses.length - 1; j++) {
 
-                    let left = _query.whereClauses[j].left;
-                    left = el[left] ?? _query.whereClauses[j].left;
-                    let right = _query.whereClauses[j].right;
-                    if (right.fn == "IN" || _query.whereClauses[j].type == "IN") {
-                        if (right.fn !== "IN") {
-                            let t = mysql._query(right, el);
-                            right = [];
-                            for (let l = 0; l <= t.length - 1; l++) {
-                                right.push(...Object.values(t[l]))
+                let asdasd = (arr) => {
+                    for (let j = 0; j <= arr.length - 1; j++) {
+                        let left = arr[j].left;
+                        left = el[left] ?? arr[j].left;
+                        let right = arr[j].right;
+                        if (arr[j]?.next?._val) {
+                            arr[j].val = asdasd(arr[j]?.next?._val);
+                        }
+                        else if (right.fn == "IN" || arr[j].type == "IN") {
+                            if (right.fn !== "IN") {
+                                let t = mysql._query(right, el);
+                                right = [];
+                                for (let l = 0; l <= t.length - 1; l++) {
+                                    right.push(...Object.values(t[l]))
+                                }
+                            } else {
+                                right = right.args
+                            }
+                            if (!right.includes(String(left))) {
+                                arr[j].val = 0
+                            } else {
+                                arr[j].val = 1
                             }
                         } else {
-                            right = right.args
+                            if (!operation[arr[j].type](left, (prev && prev[right]) ? prev[right] : right)) {
+                                arr[j].val = 0;
+                            } else {
+                                arr[j].val = 1;
+                            }
                         }
-                        if (!right.includes(String(left))) {
-                            return 0;
+
+                    }
+                    let expp = [];
+                    for (let i = 0; i <= arr.length - 1; i++) {
+
+                        expp.push(arr[i].val)
+                        if (!arr[i]?.next?._val && arr[i].next) {
+                            expp.push(arr[i].next)
                         }
-                    } else {
-                        if (!operation[_query.whereClauses[j].type](left, (prev && prev[right]) ? prev[right] : right)) {
-                            return 0;
+                        if (!arr[i]?._next?.fn && arr[i]._next) {
+                            expp.push(arr[i]._next)
                         }
                     }
-
+                    for (let i = 0; i <= expp.length - 1; i++) {
+                        if (expp[i] == 'AND') {
+                            let t = expp[i - 1] && expp[i + 1]
+                            expp.splice(i - 1, 3, t);
+                            i = i - 1;
+                        }
+                        if (expp[i] == 'OR') {
+                            let t = expp[i - 1] || expp[i + 1]
+                            expp.splice(i - 1, 3, t);
+                            i = i - 1;
+                        }
+                    }
+                    return expp[0] ?? 1;
                 }
-                return 1;
+                return asdasd(_query.whereClauses)
+
             });
             //
             res.push(...rrow);

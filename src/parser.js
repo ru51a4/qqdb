@@ -173,29 +173,50 @@ export default class SimpleSqlParserJs {
             query.joins = t;
 
             t = [];
-            for (let i = 0; i <= query.whereClauses.length - 1; i = i + 3) {
-                let next = (query.whereClauses[i + 3]);
-                if (query.whereClauses[i + 1].fn === 'IN') {
-                    next = (query.whereClauses[i + 2]);
-                    t.push({ "next": next, "left": query.whereClauses[i], 'right': query.whereClauses[i + 1], 'type': '' })
-                }
-                else if (query.whereClauses[i] === 'NOT EXISTS' || query.whereClauses[i] === 'EXISTS') {
-                    //todo
-                    next = (query.whereClauses[i + 2]);
-                    t.push({ "next": next, "left": query.whereClauses[i], 'right': query.whereClauses[i + 1], 'type': '' })
+            let deep = (arr) => {
+                let t = [];
+                for (let i = 0; i <= arr.length - 1; i = i + 3) {
+                    let next = (arr[i + 3]);
+                    let _next = null
+                    if (next?.fn == 'AND' || next?.fn == 'OR') {
+                        let a = deep(next.args)
+                        next = { _val: a.t, t_fn: next.fn }
+                        if (!arr[i + 4]?.fn) {
+                            _next = arr[i + 4];
+                        }
+                        i++
+                    }
 
-                }
-                else if (next) {
-                    t.push({ "next": next, "left": query.whereClauses[i], 'right': query.whereClauses[i + 2], 'type': query.whereClauses[i + 1] })
-                    i++
-                }
-                else {
-                    t.push({ "left": query.whereClauses[i], 'right': query.whereClauses[i + 2], 'type': query.whereClauses[i + 1] })
-                }
-                if (next) {
+                    if (arr[i + 1].fn === 'IN') {
+                        next = (arr[i + 2]);
+                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 1], 'type': '' })
+                    }
+                    else if (arr[i] === 'NOT EXISTS' || arr[i] === 'EXISTS') {
+                        //todo
+                        next = (arr[i + 2]);
+                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 1], 'type': '' })
 
+                    }
+                    else if (_next) {
+                        t.push({ "_next": _next, "next": next, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
+                        i++
+                    }
+                    else if (next) {
+                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
+                        i++
+                    }
+                    else {
+                        t.push({ "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
+                    }
+                    if (next) {
+
+                    }
                 }
+                return { t };
             }
+            let asd = deep(query.whereClauses);
+            t.push(...asd.t)
+
             query.whereClauses = t;
 
             t = [];
