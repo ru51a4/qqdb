@@ -44,7 +44,8 @@ console.log("catalog:")
 let items = mysql.query(`
     SELECT * FROM iblock_elements el  
         JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
-        JOIN (SELECT * FROM iblock_prop_value pv WHERE pv.el_id = el.id AND pv.prop_id = ip.id) spv ON el.id = spv.el_id
+        JOIN iblock_prop_value pv on el.id = pv.el_id
+        WHERE pv.prop_id = ip.id
 `)
 let prev = [];
 items.forEach((item, i) => {
@@ -52,7 +53,7 @@ items.forEach((item, i) => {
         console.log(" ");
     }
     prev = item['EL.NAME'];
-    console.log(`${item['EL.NAME']}: ${item['IP.NAME']} -> ${item['SPV.VALUE']}`)
+    console.log(`${item['EL.NAME']}: ${item['IP.NAME']} -> ${item['PV.VALUE']}`)
 });
 
 //filter

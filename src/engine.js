@@ -55,14 +55,27 @@ export default class mysql {
                     aliasTable[ja] = jt;
                 }
                 let jjj = [];
-                for (let jj = 0; jj <= mysql.table[jt].data.length - 1; jj++) {
+
+                let left = _query.joins[j].exp[0].left.split(".");
+                let right = _query.joins[j].exp[0].right.split(".");
+                let j_table_right = mysql.table[aliasTable[right[0]]];
+                let iRight = j_table_right.col.indexOf(right[1])
+                if (!mysql.cache[jt]?.[iRight]) {
+                    mysql.cache[jt] = {};
+                    mysql.cache[jt][iRight] = {};
+
+                    mysql.table[jt].data.forEach((c, i) => {
+                        if (!mysql.cache[jt][iRight][c[iRight]]) {
+                            mysql.cache[jt][iRight][c[iRight]] = [];
+                        }
+                        mysql.cache[jt][iRight][c[iRight]].push(i);
+                    });
+                }
+                for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
                     //
-                    let left = _query.joins[j].exp[0].left.split(".");
-                    let right = _query.joins[j].exp[0].right.split(".");
-                    let j_table_right = mysql.table[aliasTable[right[0]]];
-                    let iRight = j_table_right.col.indexOf(right[1])
-                    if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[jj][iRight])) {
-                        let currJoinRow = mysql.getObj(jt, jj, ja, _query.columns);
+                    let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
+                    if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+                        let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
                         let __row = JSON.parse(JSON.stringify(row));
                         mysql.mergeObj(__row, currJoinRow)
                         if (_query.joins.length - 1 == j) {
@@ -73,6 +86,7 @@ export default class mysql {
                         }
                     }
                 }
+
             }
         }
 
@@ -81,6 +95,8 @@ export default class mysql {
             //join
             rrow = [];
             if (_query.joins.length) {
+                mysql.cache = {};
+
                 join(row, 0, i)
             }
             else {
@@ -112,7 +128,7 @@ export default class mysql {
                                 arr[j].val = 1
                             }
                         } else {
-                            if (!operation[arr[j].type](left, (prev && prev[right]) ? prev[right] : right)) {
+                            if (!operation[arr[j].type](left, el[right] ?? ((prev && prev[right]) ? prev[right] : right))) {
                                 arr[j].val = 0;
                             } else {
                                 arr[j].val = 1;
