@@ -11,6 +11,7 @@ export default class mysql {
     static table = {};
 
     static query(str) {
+        mysql.cache = {};
         return mysql._query(SimpleSqlParserJs.build(str)[0]);
     }
     static _query(tt, prev) {
@@ -95,8 +96,6 @@ export default class mysql {
             //join
             rrow = [];
             if (_query.joins.length) {
-                mysql.cache = {};
-
                 join(row, 0, i)
             }
             else {
