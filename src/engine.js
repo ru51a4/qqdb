@@ -14,6 +14,7 @@ export default class mysql {
         mysql.cache = {};
         let data = mysql._query(SimpleSqlParserJs.build(str)[0]);
         mysql.cache = {};
+        return data
     }
     static _query(tt, prev) {
         let operation = [];
