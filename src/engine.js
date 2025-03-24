@@ -12,7 +12,8 @@ export default class mysql {
 
     static query(str) {
         mysql.cache = {};
-        return mysql._query(SimpleSqlParserJs.build(str)[0]);
+        let data = mysql._query(SimpleSqlParserJs.build(str)[0]);
+        mysql.cache = {};
     }
     static _query(tt, prev) {
         let operation = [];
@@ -165,6 +166,15 @@ export default class mysql {
             });
             //
             res.push(...rrow);
+
+            if (_query.limit?.[0]) {
+                let limit = Number(_query.limit?.[0]?.col)
+                let offset = Number(_query.limit?.[1]?.col ?? 0)
+                if (res.length >= limit + offset) {
+                    res = res.filter((c, i) => i >= offset && i <= limit - 1)
+                    break;
+                }
+            }
         }
         //one col
         let COL = null;
