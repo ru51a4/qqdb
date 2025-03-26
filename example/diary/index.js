@@ -23,6 +23,7 @@ mysql.table = {
         data: [
             [1, "php и рефлексия", 2],
             [2, "уютный бложик", 1],
+            [3, "left join уютный бложик", 10],
         ]
     }
 };
@@ -55,4 +56,9 @@ console.log(`======START:${blog1[0]["D.NAME"]}======`)
 blog1.forEach((el) => {
     console.log(`#${el['P.ID']} ${el['P.MSG']} [by ${el['U.LOGIN']}]`)
 });
-console.log(mysql.query(`SELECT * FROM diary d WHERE 1 = 0 OR (1 = 1 AND (1 = 1 AND d.id in (1,2)))`)); 
+console.log(mysql.query(`SELECT * FROM diary d WHERE 1 = 0 OR (1 = 1 AND (1 = 1 AND d.id in (1,2)))`));
+
+console.log(mysql.query(`
+SELECT * FROM diary d
+    LEFT JOIN users u on d.user_id = u.id
+`))

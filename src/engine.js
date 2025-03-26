@@ -60,11 +60,15 @@ export default class mysql {
                 let jjj = [];
 
                 let left = _query.joins[j].exp[0].left.split(".");
+
+                let isLEFT_JOIN = _query.joins[j].type == "LEFT";
                 let right = _query.joins[j].exp[0].right.split(".");
                 let j_table_right = mysql.table[aliasTable[right[0]]];
                 let iRight = j_table_right.col.indexOf(right[1])
                 if (!mysql.cache[jt]?.[iRight]) {
-                    mysql.cache[jt] = {};
+                    if (!mysql.cache[jt]) {
+                        mysql.cache[jt] = {};
+                    }
                     mysql.cache[jt][iRight] = {};
 
                     mysql.table[jt].data.forEach((c, i) => {
@@ -74,19 +78,34 @@ export default class mysql {
                         mysql.cache[jt][iRight][c[iRight]].push(i);
                     });
                 }
+                let f = false;
                 for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
                     //
                     let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
                     if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+                        f = true
                         let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
                         let __row = JSON.parse(JSON.stringify(row));
                         mysql.mergeObj(__row, currJoinRow)
                         if (_query.joins.length - 1 == j) {
                             rrow.push(__row);
-                            rrow.alias = ja
                         } else if (_query.joins.length - 1 - j > 0) {
                             join(__row, j + 1)
                         }
+                    }
+                }
+                if (!f && isLEFT_JOIN) {
+                    let __row = JSON.parse(JSON.stringify(row));
+                    let tt = {};
+                    mysql.table[jt].col.forEach((c) => {
+                        tt[`${ja.toUpperCase()}.${c.toUpperCase()}`] = null;
+                    })
+                    mysql.mergeObj(__row, tt)
+                    if (_query.joins.length - 1 == j) {
+                        console.log(_query.joins[j])
+                        rrow.push(__row);
+                    } else if (_query.joins.length - 1 - j > 0) {
+                        join(__row, j + 1)
                     }
                 }
 

@@ -53,6 +53,7 @@ export default class SimpleSqlParserJs {
                     continue
                 }
                 if (token === 'JOIN') {
+                    typeJoin = null;
                     isFromSources = false;
                     isJoin = true;
                     continue
