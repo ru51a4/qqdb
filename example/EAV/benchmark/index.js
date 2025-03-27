@@ -48,23 +48,7 @@ const startTime = performance.now()
 let items = mysql.query(`
     SELECT * FROM iblock_elements el  
         JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
-        JOIN iblock_prop_value pv on el.id = pv.el_id
-        WHERE pv.prop_id = ip.id
+        JOIN iblock_prop_value pv on el.id = pv.el_id AND pv.prop_id = ip.id
 `)
 const endTime = performance.now()
 console.log(`els - ${mysql.table['IBLOCK_ELEMENTS'].data.length}, prop-value - ${mysql.table['IBLOCK_PROP_VALUE'].data.length}: time - ${endTime - startTime} milliseconds`)
-
-
-//get list
-const startTime_limit = performance.now()
-let items_limit = mysql.query(`
-    SELECT * FROM iblock_elements el  
-        JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
-        JOIN iblock_prop_value pv on el.id = pv.el_id
-        WHERE pv.prop_id = ip.id
-        LIMIT 5
-        OFFSET 100
-
-`)
-const endTime_limit = performance.now()
-console.log(`els - ${mysql.table['IBLOCK_ELEMENTS'].data.length}, prop-value - ${mysql.table['IBLOCK_PROP_VALUE'].data.length}: time - ${endTime_limit - startTime_limit} milliseconds`)
