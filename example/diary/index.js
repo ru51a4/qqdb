@@ -56,9 +56,18 @@ console.log(`======START:${blog1[0]["D.NAME"]}======`)
 blog1.forEach((el) => {
     console.log(`#${el['P.ID']} ${el['P.MSG']} [by ${el['U.LOGIN']}]`)
 });
+console.log(" ")
 console.log(mysql.query(`SELECT * FROM diary d WHERE 1 = 0 OR (1 = 1 AND (1 = 1 AND d.id in (1,2)))`));
+console.log(" ")
 
 console.log(mysql.query(`
 SELECT * FROM diary d
     LEFT JOIN users u on d.user_id = u.id
 `))
+
+console.log(" ")
+console.log(mysql.query(`
+SELECT * FROM diary d
+    JOIN users u on d.user_id = u.id AND 1 = 1 AND (1 = 1 AND 1 = 1)
+    WHERE d.user_id = 1 AND (1 = 1 AND 2 = 2)
+`)) 
