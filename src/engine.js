@@ -157,11 +157,10 @@ export default class mysql {
                                 expp[d].next = expp[d + 1].ttype
                             }
                         }
-                        if (d == 0) {
-                            expp[0].left = 1;
-                            expp[0].right = 1;
-                            expp[0].type = "="
-                        }
+                        expp[0].left = 1;
+                        expp[0].right = 1;
+                        expp[0].type = "="
+
                         if (ffilter(__row, expp)) {
                             f = true
                             if (_query.joins.length - 1 == j) {
