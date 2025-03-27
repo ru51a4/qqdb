@@ -151,29 +151,7 @@ export default class SimpleSqlParserJs {
                 }
             }
             query.columns = t;
-            t = [];
-            let alias = false;
-            for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
 
-                if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
-
-                    t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
-                    i++;
-                    i++;
-                    i++;
-                } else {
-                    if (query.joins[i + 1]?.token === 'ON' || query.joins[i + 1]?.token === 'AND' || query.joins[i + 1]?.token === 'OR') {
-                        t.push({ 'exp': [], 'type': query.joins[i]?.type, "table": query.joins[i]?.token, 'alias': null })
-                    } else {
-                        t.push({ 'exp': [], 'type': query.joins[i]?.type, "table": query.joins[i]?.token, 'alias': query.joins[i + 1]?.token })
-                        i++;
-                    }
-
-                }
-            }
-            query.joins = t;
-
-            t = [];
             let deep = (arr) => {
                 let t = [];
                 for (let i = 0; i <= arr.length - 1; i = i + 3) {
@@ -196,7 +174,7 @@ export default class SimpleSqlParserJs {
                         }
                     }
 
-                    if (arr[i + 1].fn === 'IN') {
+                    if (arr[i + 1]?.fn === 'IN') {
                         next = (arr[i + 2]);
                         t.push({ "next": next, "left": arr[i], 'right': arr[i + 1], 'type': '' })
                     }
@@ -223,6 +201,32 @@ export default class SimpleSqlParserJs {
                 }
                 return { t };
             }
+
+            t = [];
+            let alias = false;
+            for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
+                if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
+                    t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
+                }
+                else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
+
+                    t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
+                    i++;
+                    i++;
+                    i++;
+                } else {
+                    if (query.joins[i + 1]?.token === 'ON' || query.joins[i + 1]?.token === 'AND' || query.joins[i + 1]?.token === 'OR') {
+                        t.push({ 'exp': [], 'type': query.joins[i]?.type, "table": query.joins[i]?.token, 'alias': null })
+                    } else {
+                        t.push({ 'exp': [], 'type': query.joins[i]?.type, "table": query.joins[i]?.token, 'alias': query.joins[i + 1]?.token })
+                        i++;
+                    }
+
+                }
+            }
+            query.joins = t;
+            t = [];
+
             let asd = deep(query.whereClauses);
             t.push(...asd.t)
 

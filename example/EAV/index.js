@@ -39,6 +39,7 @@ mysql.table = {
     },
 };
 
+
 //get list
 console.log("catalog:")
 let items = mysql.query(`
@@ -55,6 +56,7 @@ items.forEach((item, i) => {
     prev = item['EL.NAME'];
     console.log(`${item['EL.NAME']}: ${item['IP.NAME']} -> ${item['PV.VALUE']}`)
 });
+
 
 //filter
 let filter = mysql.query(`
@@ -81,4 +83,18 @@ let attr = mysql.query(`
 `)
 attr.forEach((el) => {
     console.log(`✅ ${el['IP.NAME']} - "${el['PV.VALUE']}"`)
+});
+
+//filter
+let filterJOIN = mysql.query(`
+    SELECT * FROM iblock_elements el  
+        JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
+        JOIN iblock_prop_value f  ON el.id = f.el_id  AND f.prop_id = 1 AND f.value = '174-16-xx'
+        JOIN iblock_prop_value f2 ON el.id = f2.el_id AND f2.prop_id = 2 AND f2.value = 'текстиль/полимер'
+        GROUP BY el.id
+`)
+console.log("")
+console.log('filtred:')
+filterJOIN.forEach((item, i) => {
+    console.log(`#${item['EL.ID']} - "${item['EL.NAME']}`)
 });

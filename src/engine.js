@@ -38,98 +38,17 @@ export default class mysql {
         let aliasTable = [];
         aliasTable[_query.fromSources[0].alias] = _query.fromSources[0].table;
         let rrow = [];
-
-        let join = (row, jj) => {
-            for (let j = jj; j <= jj; j++) {
-                let jf = true;
-                let jt = _query.joins[j].table
-                let ja = _query.joins[j].alias;
-                if (typeof _query.joins[j].table === "object") {
-                    mysql.table[ja] = {};
-                    let subquery = mysql._query(_query.joins[j].table, row);
-                    if (!subquery.length) {
-                        return;
-                    }
-                    mysql.table[ja].col = Object.keys(subquery[0]).map(c => c.split(".")[1]);
-                    mysql.table[ja].data = subquery.map((c) => Object.values(c));
-                    aliasTable[ja] = ja;
-                    jt = ja;
-                } else {
-                    aliasTable[ja] = jt;
-                }
-                let jjj = [];
-
-                let left = _query.joins[j].exp[0].left.split(".");
-
-                let isLEFT_JOIN = _query.joins[j].type == "LEFT";
-                let right = _query.joins[j].exp[0].right.split(".");
-                let j_table_right = mysql.table[aliasTable[right[0]]];
-                let iRight = j_table_right.col.indexOf(right[1])
-                if (!mysql.cache[jt]?.[iRight]) {
-                    if (!mysql.cache[jt]) {
-                        mysql.cache[jt] = {};
-                    }
-                    mysql.cache[jt][iRight] = {};
-
-                    mysql.table[jt].data.forEach((c, i) => {
-                        if (!mysql.cache[jt][iRight][c[iRight]]) {
-                            mysql.cache[jt][iRight][c[iRight]] = [];
-                        }
-                        mysql.cache[jt][iRight][c[iRight]].push(i);
-                    });
-                }
-                let f = false;
-                for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
-                    //
-                    let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
-                    if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
-                        f = true
-                        let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
-                        let __row = JSON.parse(JSON.stringify(row));
-                        mysql.mergeObj(__row, currJoinRow)
-                        if (_query.joins.length - 1 == j) {
-                            rrow.push(__row);
-                        } else if (_query.joins.length - 1 - j > 0) {
-                            join(__row, j + 1)
-                        }
-                    }
-                }
-                if (!f && isLEFT_JOIN) {
-                    let __row = JSON.parse(JSON.stringify(row));
-                    let tt = {};
-                    mysql.table[jt].col.forEach((c) => {
-                        tt[`${ja.toUpperCase()}.${c.toUpperCase()}`] = null;
-                    })
-                    mysql.mergeObj(__row, tt)
-                    if (_query.joins.length - 1 == j) {
-                        console.log(_query.joins[j])
-                        rrow.push(__row);
-                    } else if (_query.joins.length - 1 - j > 0) {
-                        join(__row, j + 1)
-                    }
-                }
-
-            }
-        }
-
-        for (let i = 0; i <= mysql.table[_query.fromSources[0].table].data.length - 1; i++) {
-            let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
-            //join
-            rrow = [];
-            if (_query.joins.length) {
-                join(row, 0, i)
-            }
-            else {
-                rrow.push(row);
-            }
-            rrow = rrow.filter((el) => {
-
+        let ffilter = (el, arr) => {
+            {
                 let deep = (arr) => {
                     for (let j = 0; j <= arr.length - 1; j++) {
                         let left = arr[j].left;
                         left = el[left] ?? arr[j].left;
                         let right = arr[j].right;
-                        if (arr[j]?.next?._val) {
+                        if (arr[j].__val) {
+                            arr[j].val = deep(arr[j]?.__val);
+                        }
+                        else if (arr[j]?.next?._val) {
                             arr[j].val = deep(arr[j]?.next?._val);
                         }
                         else if (right.fn == "IN" || arr[j].type == "IN") {
@@ -181,12 +100,107 @@ export default class mysql {
                     }
                     return expp[0] ?? 1;
                 }
-                return deep(_query.whereClauses)
+                return deep(arr)
 
-            });
+            }
+        }
+        let join = (row, jj) => {
+            for (let j = jj; j <= jj; j++) {
+                let jf = true;
+                let jt = _query.joins[j].table
+                let ja = _query.joins[j].alias;
+                if (typeof _query.joins[j].table === "object") {
+                    mysql.table[ja] = {};
+                    let subquery = mysql._query(_query.joins[j].table, row);
+                    if (!subquery.length) {
+                        return;
+                    }
+                    mysql.table[ja].col = Object.keys(subquery[0]).map(c => c.split(".")[1]);
+                    mysql.table[ja].data = subquery.map((c) => Object.values(c));
+                    aliasTable[ja] = ja;
+                    jt = ja;
+                } else {
+                    aliasTable[ja] = jt;
+                }
+                let jjj = [];
+
+                let left = _query.joins[j].exp[0].left.split(".");
+
+                let isLEFT_JOIN = _query.joins[j].type == "LEFT";
+                let right = _query.joins[j].exp[0].right.split(".");
+                let j_table_right = mysql.table[aliasTable[right[0]]];
+                let iRight = j_table_right.col.indexOf(right[1])
+                if (!mysql.cache[jt]?.[iRight]) {
+                    if (!mysql.cache[jt]) {
+                        mysql.cache[jt] = {};
+                    }
+                    mysql.cache[jt][iRight] = {};
+
+                    mysql.table[jt].data.forEach((c, i) => {
+                        if (!mysql.cache[jt][iRight][c[iRight]]) {
+                            mysql.cache[jt][iRight][c[iRight]] = [];
+                        }
+                        mysql.cache[jt][iRight][c[iRight]].push(i);
+                    });
+                }
+                let f = false;
+                for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
+                    //
+                    let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
+                    if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+                        let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
+                        let __row = JSON.parse(JSON.stringify(row));
+                        mysql.mergeObj(__row, currJoinRow)
+                        let expp = JSON.parse(JSON.stringify(_query.joins[j].exp));
+                        for (let d = 0; d <= expp.length - 1; d++) {
+                            if (expp[d + 1]) {
+                                expp[d].next = expp[d + 1].ttype
+                            }
+                            if (d == [0]) {
+                                expp[0].left = 1;
+                                expp[0].right = 1;
+                            }
+                        }
+                        if (ffilter(__row, expp)) {
+                            f = true
+                            if (_query.joins.length - 1 == j) {
+                                rrow.push(__row);
+                            } else if (_query.joins.length - 1 - j > 0) {
+                                join(__row, j + 1)
+                            }
+                        }
+                    }
+                }
+                if (!f && isLEFT_JOIN) {
+                    let __row = JSON.parse(JSON.stringify(row));
+                    let tt = {};
+                    mysql.table[jt].col.forEach((c) => {
+                        tt[`${ja.toUpperCase()}.${c.toUpperCase()}`] = null;
+                    })
+                    mysql.mergeObj(__row, tt)
+                    if (_query.joins.length - 1 == j) {
+                        rrow.push(__row);
+                    } else if (_query.joins.length - 1 - j > 0) {
+                        join(__row, j + 1)
+                    }
+                }
+
+            }
+        }
+
+        for (let i = 0; i <= mysql.table[_query.fromSources[0].table].data.length - 1; i++) {
+            let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
+            //join
+            rrow = [];
+            if (_query.joins.length) {
+                join(row, 0, i)
+            }
+            else {
+                rrow.push(row);
+            }
+            rrow = rrow.filter((el) => ffilter(el, _query.whereClauses));
             //
             res.push(...rrow);
-
             if (_query.limit?.[0]) {
                 let limit = Number(_query.limit?.[0]?.col)
                 let offset = Number(_query.limit?.[1]?.col ?? 0)
