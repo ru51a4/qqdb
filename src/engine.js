@@ -19,7 +19,7 @@ export default class mysql {
         return data
     }
     static _query(tt, prev) {
-        let cache_key = JSON.stringify(tt, prev) // todo check use prev attr;
+        let cache_key = JSON.stringify([tt, prev]) // todo check use prev attr;
         if (mysql.cache_subquery[cache_key]) {
             return mysql.cache_subquery[cache_key];
         }
