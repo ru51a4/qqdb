@@ -12,11 +12,17 @@ export default class mysql {
 
     static query(str) {
         mysql.cache = {};
+        mysql.cache_subquery = {};
         let data = mysql._query(SimpleSqlParserJs.build(str)[0]);
         mysql.cache = {};
+        mysql.cache_subquery = {};
         return data
     }
     static _query(tt, prev) {
+        let cache_key = JSON.stringify(tt, prev) // todo check use prev attr;
+        if (mysql.cache_subquery[cache_key]) {
+            return mysql.cache_subquery[cache_key];
+        }
         let operation = [];
         operation["<"] = (a, b) => {
             return a < b;
@@ -187,7 +193,9 @@ export default class mysql {
 
             }
         }
-
+        //
+        //MAIN
+        //
         for (let i = 0; i <= mysql.table[_query.fromSources[0].table].data.length - 1; i++) {
             let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
             //join
@@ -269,8 +277,8 @@ export default class mysql {
                 res = res.sort((a, b) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
             }
         }
-
-        return (res)
+        mysql.cache_subquery[cache_key] = res;
+        return res
     }
 
     static mergeObj(obj, obj2) {

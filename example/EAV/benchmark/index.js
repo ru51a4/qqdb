@@ -61,7 +61,7 @@ let items_limit = mysql.query(`
         JOIN iblock_properties ip on el.iblock_id = ip.iblock_id 
         JOIN iblock_prop_value pv on el.id = pv.el_id and pv.prop_id = ip.id
         LIMIT 5
-        OFFSET 100
+        OFFSET 10000
 
 `)
 const endTime_limit = performance.now()
