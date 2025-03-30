@@ -468,7 +468,12 @@ class mysql {
           aliasTable[ja] = jt;
         }
         let jjj = [];
-
+        let __left = _query.joins[j].exp[0].left.split(".");
+        if (!row[__left[0] + '.' + __left[1]]) {
+          let t = JSON.parse(JSON.stringify(_query.joins[j].exp[0].left));
+          _query.joins[j].exp[0].left = _query.joins[j].exp[0].right;
+          _query.joins[j].exp[0].right = t;
+        }
         let left = _query.joins[j].exp[0].left.split(".");
 
         let isLEFT_JOIN = _query.joins[j].type == "LEFT";
