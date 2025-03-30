@@ -308,7 +308,7 @@ export default class mysql {
             obj[_col] = r.data[j][i];
         }
         for (let j = 0; j <= columns.length - 1; j++) {
-            if (typeof columns[j].col == 'string' && !columns[j].col.includes('.')) {
+            if (columns[j].col != "*" && typeof columns[j].col == 'string' && !columns[j].col.includes('.')) {
                 obj['_.' + uuidv4()] = columns[j].col;
             }
         }
