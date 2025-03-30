@@ -67,7 +67,7 @@ export default class mysql {
                             } else {
                                 right = right.args
                             }
-                            if (!right.includes(String(left))) {
+                            if (!right.map((c) => String(c)).includes(String(left))) {
                                 arr[j].val = 0
                             } else {
                                 arr[j].val = 1
