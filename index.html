@@ -179,6 +179,9 @@ ORDER BY PP.PID DESC</textarea>
     let mainfn = (num) => {
 
         let res = (mysql.query(` ${sql.value} `));
+        if (!res.length) {
+            document.querySelector(".res").innerHTML = `<tr></tr>`
+        }
         let html = "";
         html += '<tr>'
         Object.keys(res[0]).forEach((key) => {
