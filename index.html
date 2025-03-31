@@ -180,7 +180,8 @@ ORDER BY PP.PID DESC</textarea>
 
         let res = (mysql.query(` ${sql.value} `));
         if (!res.length) {
-            document.querySelector(".res").innerHTML = `<tr></tr>`
+            document.querySelector(".res").innerHTML = `<h4>empty</h4>`
+            return;
         }
         let html = "";
         html += '<tr>'
