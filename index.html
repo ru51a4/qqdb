@@ -35,8 +35,8 @@
         <div class="mt-5 row justify-content-center">
             <div class="col-2">
                 <select onchange="change(event)">
-                    <option value="1">EAV</option>
-                    <option value="2">diaries</option>
+                    <option value="1">diaries</option>
+                    <option value="2">EAV</option>
                 </select>
             </div>
         </div>
@@ -145,7 +145,7 @@ ORDER BY PP.PID DESC</textarea>
     let init = {};
     function change(event) {
         if (event) {
-            mysql.table = event.target.value == "1" ? JSON.parse(JSON.stringify(eav)) : JSON.parse(JSON.stringify(table));
+            mysql.table = event.target.value == "1" ? JSON.parse(JSON.stringify(diary)) : JSON.parse(JSON.stringify(eav));
             init = JSON.parse(JSON.stringify(mysql.table))
         }
         table();
@@ -174,7 +174,7 @@ ORDER BY PP.PID DESC</textarea>
     window.addEventListener("load", (event) => {
         table()
     });
-    mysql.table = JSON.parse(JSON.stringify(eav))
+    mysql.table = JSON.parse(JSON.stringify(diary))
     init = JSON.parse(JSON.stringify(mysql.table))
     table()
 
