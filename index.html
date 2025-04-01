@@ -223,10 +223,22 @@ WHERE ib.left > gg.left AND ib.right < gg.right
     }
     var m = () => {
 
-        //  try {
-        num = $('textarea').prop("selectionStart");
-        mainfn(num, 0, num);
-        document.querySelector('.error').innerHTML = ``
+        try {
+            num = $('textarea').prop("selectionStart");
+            mainfn(num, 0, num);
+            document.querySelector('.error').innerHTML = ``
+        } catch (e) {
+            document.querySelector(".res").innerHTML = ``
+            document.querySelector('.error').innerHTML = `
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                <div>
+                    ${e}
+                </div>
+                </div>
+                `;
+
+        }
     };
     sql.addEventListener('keypress', m); // Every character written
     sql.addEventListener('input', m); // Other input events
