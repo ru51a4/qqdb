@@ -479,7 +479,7 @@ class mysql {
         let isLEFT_JOIN = _query.joins[j].type == "LEFT";
         let right = _query.joins[j].exp[0].right.split(".");
         let j_table_right = mysql.table[aliasTable[right[0]]];
-        let iRight = j_table_right.col.indexOf(right[1])
+        let iRight = j_table_right?.col?.indexOf(right[1])
         if (!mysql.cache[jt]?.[iRight]) {
           if (!mysql.cache[jt]) {
             mysql.cache[jt] = {};
@@ -497,7 +497,7 @@ class mysql {
         for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
           //
           let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
-          if (operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+          if (operation['='](left[0], right[0]) || operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
             let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
             let __row = JSON.parse(JSON.stringify(row));
             mysql.mergeObj(__row, currJoinRow)
