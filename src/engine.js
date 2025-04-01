@@ -157,7 +157,6 @@ export default class mysql {
                 let f = false;
                 for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
                     //
-                    console.log(left, right)
                     let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
                     if (operation['='](left[0], right[0]) || operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
                         let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
