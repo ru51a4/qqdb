@@ -400,7 +400,6 @@ class mysql {
             }
             else if (right.fn == "IN" || arr[j].type == "IN") {
               if (right.fn !== "IN") {
-                console.log({ el })
                 let t = mysql._query(right, el);
                 right = [];
                 for (let l = 0; l <= t.length - 1; l++) {
@@ -459,7 +458,6 @@ class mysql {
         let ja = _query.joins[j].alias;
         if (typeof _query.joins[j].table === "object") {
           mysql.table[ja] = {};
-          console.log({ row })
           let subquery = mysql._query(_query.joins[j].table, row);
           if (!subquery.length) {
             return;
