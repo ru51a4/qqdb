@@ -546,7 +546,7 @@ class mysql {
 
     if (!_query.whereClauses.find((c) => c?.next === 'OR') && _query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<" && Number(_query.whereClauses[0]?.right) == _query.whereClauses[0]?.right) {
       let ttype = _query.whereClauses[0]?.type;
-      let val = Number(_query.whereClauses[0].right);
+      let val = Number(prev[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
       let arr = mysql.table[_query.fromSources[0].table].data;
       let lt = _query.whereClauses[0]?.left.split(".");
       let coll = mysql.table[_query.fromSources[0].table].col.indexOf(lt[1] ?? lt[0])
