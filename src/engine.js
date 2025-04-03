@@ -61,6 +61,7 @@ export default class mysql {
                         }
                         else if (right.fn == "IN" || arr[j].type == "IN") {
                             if (right.fn !== "IN") {
+                                console.log({ el })
                                 let t = mysql._query(right, el);
                                 right = [];
                                 for (let l = 0; l <= t.length - 1; l++) {
@@ -119,6 +120,7 @@ export default class mysql {
                 let ja = _query.joins[j].alias;
                 if (typeof _query.joins[j].table === "object") {
                     mysql.table[ja] = {};
+                    console.log({ row })
                     let subquery = mysql._query(_query.joins[j].table, row);
                     if (!subquery.length) {
                         return;
@@ -205,8 +207,7 @@ export default class mysql {
         //
         let loop = mysql.table[_query.fromSources[0].table].data;
 
-
-        if (!_query.whereClauses.find((c) => c?.next === 'OR') && _query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<") {
+        if ((_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
             let ttype = _query.whereClauses[0]?.type;
             let val = Number(prev[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
             let arr = mysql.table[_query.fromSources[0].table].data;
@@ -383,7 +384,7 @@ export default class mysql {
                     break
                 }
             }
-            obj[_col] = r.data[j][i];
+            obj[_col] = r.data[j]?.[i];
         }
         for (let j = 0; j <= columns.length - 1; j++) {
             if (columns[j].col != "*" && typeof columns[j].col == 'string' && !columns[j].col.includes('.')) {
