@@ -203,11 +203,12 @@ export default class mysql {
         //
         //MAIN
         //
-        let loop = mysql.table[_query.fromSources[0].table].data;
+        let loop = [];
 
         if (!_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
+            loop = [];
             let ttype = _query.whereClauses[0]?.type;
-            let val = Number(prev[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
+            let val = Number(prev?.[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
             let arr = mysql.table[_query.fromSources[0].table].data;
             let lt = _query.whereClauses[0]?.left.split(".");
             let coll = mysql.table[_query.fromSources[0].table].col.indexOf(lt[1] ?? lt[0])
@@ -220,19 +221,19 @@ export default class mysql {
                 }
                 let _node = {};
                 var middle = arr[Math.floor((arr.length - 1) / 2)];
-                _node.val = middle;
+                _node.val = middle.val;
+                _node.i = middle.i
                 _node.left = deep(arr.filter((c, i) => i < Math.floor((arr.length - 1) / 2)));
                 _node.right = deep(arr.filter((c, i) => i > Math.floor((arr.length - 1) / 2)));
                 return _node;
             }
             if (!mysql.cache_sort[_query.fromSources[0].table][coll]) {
-                let root = deep(arr.sort((a, b) => a[coll] - b[coll]));
+                let root = deep(arr.map((c, i) => { return { val: [...c], i: i } }).sort((a, b) => a[coll] - b[coll]));
                 mysql.cache_sort[_query.fromSources[0].table][coll] = { root: root };
             }
             let root = mysql.cache_sort[_query.fromSources[0].table][coll].root;
-            loop = [];
             let dfs = (node) => {
-                if (Number(node.val[coll]) == val) {
+                if (Number(node.val[coll]) == Number(val)) {
                     if (node.left) {
                         dfs(node.left)
                     }
@@ -246,7 +247,7 @@ export default class mysql {
                     }
                 }
                 if (ttype == "<" && Number(node.val[coll]) < val) {
-                    loop.push(node.val)
+                    loop.push(node)
                     if (node.left) {
                         dfs(node.left)
                     }
@@ -261,7 +262,7 @@ export default class mysql {
                     }
                 }
                 if (ttype == ">" && Number(node.val[coll]) > val) {
-                    loop.push(node.val)
+                    loop.push(node)
                     if (node.right) {
                         dfs(node.right)
                     }
@@ -271,8 +272,13 @@ export default class mysql {
                 }
             }
             dfs(root)
+            loop = loop.map((c) => c.i)
+        } else {
+            loop = mysql.table[_query.fromSources[0].table].data.map((c, i) => i);
         }
-        for (let i = 0; i <= loop.length - 1; i++) {
+        console.log({ loop })
+        for (let ki = 0; ki <= loop.length - 1; ki++) {
+            let i = loop[ki]
             let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
             //join
             rrow = [];
