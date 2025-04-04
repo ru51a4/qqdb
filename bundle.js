@@ -573,10 +573,10 @@ class mysql {
       let root = mysql.cache_sort[_query.fromSources[0].table][coll].root;
       let dfs = (node) => {
         if (Number(node.val[coll]) == Number(val)) {
-          if (node.left) {
+          if (ttype == "<" && node.left) {
             dfs(node.left)
           }
-          if (node.right) {
+          if (ttype == ">" && node.right) {
             dfs(node.right)
           }
         }
