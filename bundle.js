@@ -615,7 +615,7 @@ class mysql {
     } else {
       loop = mysql.table[_query.fromSources[0].table].data.map((c, i) => i);
     }
-    console.log({ loop })
+    loop = loop.sort((a, b) => a - b)
     for (let ki = 0; ki <= loop.length - 1; ki++) {
       let i = loop[ki]
       let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
