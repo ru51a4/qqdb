@@ -542,9 +542,10 @@ class mysql {
     //
     //MAIN
     //
+    let a = performance.now();
     let loop = [];
 
-    if (!_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
+    if (0 && !_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
       loop = [];
       let ttype = _query.whereClauses[0]?.type;
       let val = Number(prev?.[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
@@ -586,7 +587,7 @@ class mysql {
           }
         }
         if (ttype == "<" && Number(node.val[coll]) < val) {
-          loop.push(node)
+          loop.push(node.i)
           if (node.left) {
             dfs(node.left)
           }
@@ -601,7 +602,7 @@ class mysql {
           }
         }
         if (ttype == ">" && Number(node.val[coll]) > val) {
-          loop.push(node)
+          loop.push(node.i)
           if (node.right) {
             dfs(node.right)
           }
@@ -611,7 +612,6 @@ class mysql {
         }
       }
       dfs(root)
-      loop = loop.map((c) => c.i)
     } else {
       loop = mysql.table[_query.fromSources[0].table].data.map((c, i) => i);
     }
@@ -639,7 +639,8 @@ class mysql {
         }
       }
     }
-
+    let b = performance.now();
+    console.log(b - a)
     //one col
     let COL = null;
 

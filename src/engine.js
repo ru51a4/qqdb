@@ -247,7 +247,7 @@ export default class mysql {
                     }
                 }
                 if (ttype == "<" && Number(node.val[coll]) < val) {
-                    loop.push(node)
+                    loop.push(node.i)
                     if (node.left) {
                         dfs(node.left)
                     }
@@ -262,7 +262,7 @@ export default class mysql {
                     }
                 }
                 if (ttype == ">" && Number(node.val[coll]) > val) {
-                    loop.push(node)
+                    loop.push(node.i)
                     if (node.right) {
                         dfs(node.right)
                     }
@@ -272,7 +272,6 @@ export default class mysql {
                 }
             }
             dfs(root)
-            loop = loop.map((c) => c.i)
         } else {
             loop = mysql.table[_query.fromSources[0].table].data.map((c, i) => i);
         }
