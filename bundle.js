@@ -545,7 +545,7 @@ class mysql {
     let a = performance.now();
     let loop = [];
 
-    if (0 && !_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
+    if (!_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
       loop = [];
       let ttype = _query.whereClauses[0]?.type;
       let val = Number(prev?.[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
