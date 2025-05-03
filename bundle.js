@@ -544,16 +544,28 @@ class mysql {
     //
     let a = performance.now();
     let loop = null;
-
+    let _from = _query.fromSources[0].table;
+    if (typeof _from === 'object') {
+      let ja = _query.fromSources[0].alias
+      mysql.table[ja] = {};
+      let subquery = mysql._query(_query.fromSources[0].table);
+      if (!subquery.length) {
+        //return;
+      }
+      mysql.table[ja].col = Object.keys(subquery[0]).map(c => c.split(".")[1]);
+      mysql.table[ja].data = subquery.map((c) => Object.values(c));
+      aliasTable[ja] = ja;
+      _from = ja;
+    }
     if (!_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
       loop = [];
       let ttype = _query.whereClauses[0]?.type;
       let val = Number(prev?.[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
-      let arr = mysql.table[_query.fromSources[0].table].data;
+      let arr = mysql.table[_from].data;
       let lt = _query.whereClauses[0]?.left.split(".");
-      let coll = mysql.table[_query.fromSources[0].table].col.indexOf(lt[1] ?? lt[0])
-      if (!mysql.cache_sort[_query.fromSources[0].table]) {
-        mysql.cache_sort[_query.fromSources[0].table] = {};
+      let coll = mysql.table[_from].col.indexOf(lt[1] ?? lt[0])
+      if (!mysql.cache_sort[_from]) {
+        mysql.cache_sort[_from] = {};
       }
       let deep = (arr) => {
         if (!arr.length) {
@@ -567,11 +579,11 @@ class mysql {
         _node.right = deep(arr.filter((c, i) => i > Math.floor((arr.length - 1) / 2)));
         return _node;
       }
-      if (!mysql.cache_sort[_query.fromSources[0].table][coll]) {
+      if (!mysql.cache_sort[_from][coll]) {
         let root = deep(arr.map((c, i) => { return { val: [...c], i: i } }).sort((a, b) => a[coll] - b[coll]));
-        mysql.cache_sort[_query.fromSources[0].table][coll] = { root: root };
+        mysql.cache_sort[_from][coll] = { root: root };
       }
-      let root = mysql.cache_sort[_query.fromSources[0].table][coll].root;
+      let root = mysql.cache_sort[_from][coll].root;
       let dfs = (node) => {
         if (Number(node.val[coll]) == Number(val)) {
           if (ttype == "<" && node.left) {
@@ -614,12 +626,12 @@ class mysql {
       dfs(root)
       loop = loop.sort((a, b) => a - b)
     } else {
-      loop = mysql.table[_query.fromSources[0].table].data.length
+      loop = mysql.table[_from].data.length
     }
     loop = Array.isArray(loop) ? loop : Array.from({ length: loop }, (_, i) => i);
     for (let ki = 0; ki <= loop.length - 1; ki++) {
       let i = loop[ki]
-      let row = mysql.getObj(_query.fromSources[0].table, i, _query.fromSources[0].alias, _query.columns);
+      let row = mysql.getObj(_from, i, _query.fromSources[0].alias, _query.columns);
       //join
       rrow = [];
       if (_query.joins.length) {
