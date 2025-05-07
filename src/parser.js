@@ -152,64 +152,36 @@ export default class SimpleSqlParserJs {
             }
             query.columns = t;
 
-            let deep = (arr) => {
-                let t = [];
-                for (let i = 0; i <= arr.length - 1; i = i + 3) {
-                    let next = (arr[i + 3]);
-                    let _next = null
-                    if (next?.fn == 'AND' || next?.fn == 'OR') {
-                        let a = deep(next.args)
-                        next = { _val: a.t, t_fn: next.fn }
-                        if (next) {
-                            //shiiit
-                            t.push({ "next": next.t_fn, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
-                            t.push({ "next": next, "left": arr[i], 'right': arr[i + 2], 'type': "=" })
-                            i++
-                            continue
-                        }
-
-                        //todo
-                        if (!arr[i + 4]?.fn) {
-                            _next = arr[i + 4];
-                        }
-                    }
-
-                    if (arr[i + 1]?.fn === 'IN') {
-                        next = (arr[i + 2]);
-                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 1], 'type': '' })
-                    }
-                    else if (arr[i] === 'NOT EXISTS' || arr[i] === 'EXISTS') {
-                        //todo
-                        next = (arr[i + 2]);
-                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 1], 'type': '' })
-
-                    }
-                    else if (_next) {
-                        t.push({ "_next": _next, "next": next, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
-                        i++
-                    }
-                    else if (next) {
-                        t.push({ "next": next, "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
-                        i++
-                    }
-                    else {
-                        t.push({ "left": arr[i], 'right': arr[i + 2], 'type': arr[i + 1] })
-                    }
-                    if (next) {
-
-                    }
-                }
-                return { t };
-            }
-
             t = [];
             let alias = false;
+
+            let deep = (arr) => {
+                let t = [];
+                for (let i = 0; i <= arr.length - 1; i++) {
+                    if (arr[i].fn && arr[i].fn !== "IN") {
+                        let tt = deep(arr[i].args)
+                        t.push({ "arr": tt, 'type': arr[i].fn })
+                    }
+                    if (arr[i] == '=' || arr[i] == '<>' || arr[i] == '<' || arr[i] == '>') {
+                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': arr[i] })
+                    }
+                    if (arr[i] === "IN") {
+                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': 'IN' })
+                    }
+                    if (arr[i]?.fn === "IN") {
+                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i], 'type': 'IN' })
+                    }
+                }
+                return t;
+            }
+
             for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
                 if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
-                    t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
+                    //todo
+                    // nested exp in join on
+                    //t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
                 }
                 else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
-
                     t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
                     i++;
                     i++;
@@ -227,10 +199,10 @@ export default class SimpleSqlParserJs {
             query.joins = t;
             t = [];
 
-            let asd = deep(query.whereClauses);
-            t.push(...asd.t)
 
+            t.push(...deep(['1', '=', '1', 'AND', ...query.whereClauses]))
             query.whereClauses = t;
+
 
             t = [];
             for (let i = 0; i <= query.havingClauses.length - 1; i = i + 3) {

@@ -48,51 +48,55 @@ export default class mysql {
         let ffilter = (el, arr) => {
             {
                 let deep = (arr) => {
+                    let res = [];
                     for (let j = 0; j <= arr.length - 1; j++) {
+                        let val = {};
                         let left = arr[j].left;
                         left = el[left] ?? arr[j].left;
                         let right = arr[j].right;
-                        if (arr[j].__val) {
-                            arr[j].val = deep(arr[j]?.__val);
-                        }
-                        else if (arr[j]?.next?._val) {
-                            arr[j].val = deep(arr[j]?.next?._val);
-                        }
-                        else if (right.fn == "IN" || arr[j].type == "IN") {
-                            if (right.fn !== "IN") {
-                                let t = mysql._query(right, el);
-                                right = [];
-                                for (let l = 0; l <= t.length - 1; l++) {
-                                    right.push(...Object.values(t[l]))
+
+                        if (arr[j].arr && arr[j].type != 'IN') {
+                            res.push(arr[j].type)
+                            res.push(deep(arr[j].arr))
+                        } else if (arr[j].type == "IN") {
+                            let t = [];
+                            if (arr[j].right.columns) {
+
+                                let tt = mysql._query(arr[j].right, el);
+                                let _right = [];
+                                for (let l = 0; l <= tt.length - 1; l++) {
+                                    _right.push(...Object.values(tt[l]))
                                 }
-                            } else {
-                                right = right.args
+                                t = _right
                             }
-                            if (!right.map((c) => String(c)).includes(String(left))) {
-                                arr[j].val = 0
-                            } else {
-                                arr[j].val = 1
+                            if (arr[j].right.args) {
+                                t = arr[j].right.args;
                             }
+                            if (!t.map((c) => String(c)).includes(String(left))) {
+                                val = 0
+                            } else {
+                                val = 1
+                            }
+                            if (arr[j].ttype == "AND" || arr[j].ttype == "OR") {
+                                res.push(arr[j].ttype)
+                            }
+                            res.push(val)
+
                         } else {
                             if (!operation[arr[j].type](left, el[right] ?? ((prev && prev[right]) ? prev[right] : right))) {
-                                arr[j].val = 0;
+                                val = 0;
                             } else {
-                                arr[j].val = 1;
+                                val = 1;
                             }
-                        }
+                            if (arr[j].ttype == "AND" || arr[j].ttype == "OR") {
+                                res.push(arr[j].ttype)
+                            }
+                            res.push(val)
 
-                    }
-                    let expp = [];
-                    for (let i = 0; i <= arr.length - 1; i++) {
-
-                        expp.push(arr[i].val)
-                        if (!arr[i]?.next?._val && arr[i].next) {
-                            expp.push(arr[i].next)
-                        }
-                        if (!arr[i]?._next?.fn && arr[i]._next) {
-                            expp.push(arr[i]._next)
                         }
                     }
+
+                    let expp = res
                     for (let i = 0; i <= expp.length - 1; i++) {
                         if (expp[i] == 'AND') {
                             let t = expp[i - 1] && expp[i + 1]
@@ -108,7 +112,6 @@ export default class mysql {
                     return expp[0] ?? 1;
                 }
                 return deep(arr)
-
             }
         }
         let join = (row, jj) => {
@@ -313,7 +316,6 @@ export default class mysql {
             }
         }
         let b = performance.now();
-        console.log(b - a)
         //one col
         let COL = null;
 
