@@ -176,7 +176,6 @@ export default class SimpleSqlParserJs {
             }
 
             for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
-                console.log()
                 if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
                     //todo
                     // nested exp in join on
@@ -201,7 +200,6 @@ export default class SimpleSqlParserJs {
                 }
             }
             query.joins = t;
-            console.log(query.joins)
             t = [];
 
 
