@@ -181,7 +181,7 @@ export default class SimpleSqlParserJs {
                     // nested exp in join on
                     //t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
 
-                    t[t.length - 1].exp.push(...deep(['AND', '1', '=', '1', 'AND', ...query.joins[i].token.args]))
+                    t[t.length - 1].exp.push(...deep(['AND', '1', '=', '1', query.joins[i]?.token?.fn, ...query.joins[i].token.args]))
 
                 }
                 else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
