@@ -176,10 +176,14 @@ export default class SimpleSqlParserJs {
             }
 
             for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
+                console.log()
                 if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
                     //todo
                     // nested exp in join on
                     //t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
+
+                    t[t.length - 1].exp.push(...deep(['AND', '1', '=', '1', 'AND', ...query.joins[i].token.args]))
+
                 }
                 else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
                     t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
@@ -197,6 +201,7 @@ export default class SimpleSqlParserJs {
                 }
             }
             query.joins = t;
+            console.log(query.joins)
             t = [];
 
 
