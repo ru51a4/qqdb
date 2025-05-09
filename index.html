@@ -43,7 +43,12 @@
         <div class="row mt-5">
             <div class="col-6">
                 <textarea id="sql" class="form-control" rows="20" aria-label="scss">SELECT * FROM DIARY D
-JOIN posts p ON p.diary_id = d.id and (1 = 0 OR (1 = 1 AND 2 = 3))</textarea>
+JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
+FROM POSTS P
+JOIN USERS U ON P.USER_ID = U.ID
+GROUP BY P.DIARY_ID ) PP ON D.ID = PP.DIARY_ID
+JOIN USERS U ON D.USER_ID = U.ID
+ORDER BY PP.PID DESC</textarea>
             </div>
             <div class="col-6">
                 <table class="main"></table>
