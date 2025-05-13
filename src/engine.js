@@ -116,7 +116,6 @@ export default class mysql {
         }
         let join = (row, jj) => {
             for (let j = jj; j <= jj; j++) {
-                let jf = true;
                 let jt = _query.joins[j].table
                 let ja = _query.joins[j].alias;
                 if (typeof _query.joins[j].table === "object") {
@@ -132,7 +131,6 @@ export default class mysql {
                 } else {
                     aliasTable[ja] = jt;
                 }
-                let jjj = [];
                 let __left = _query.joins[j].exp[0].left.split(".");
                 if (!row[__left[0] + '.' + __left[1]]) {
                     let t = JSON.parse(JSON.stringify(_query.joins[j].exp[0].left));
@@ -317,8 +315,6 @@ export default class mysql {
         }
         let b = performance.now();
         //one col
-        let COL = null;
-
         if (_query.columns[0].col.includes(".") && _query.columns[0].col != "*" && _query.columns.length == 1) {
             let __res = [];
             for (let i = 0; i <= res.length - 1; i++) {
@@ -328,20 +324,37 @@ export default class mysql {
             res = __res
         }
 
-
         //group by
         if (_query.groupByColumns.length) {
             let grrow = [];
             //
-            let selects = [];
-            let maxCol = null;
-            let countCol = null;
+            let delimiter = '';
+            let arr_aggregate = [];
             _query.columns.forEach((c) => {
+                g_alias = c.alias;
                 if (c.col.fn === "MAX") {
                     maxCol = c.alias ? '_.' + c.alias : c.col.args[0]
+                    arr_aggregate.push({ gtype: 'MAX', col: c.col.args[0], alias: c.alias })
                 }
-                if (c.col.fn === "COUNT(*)") {
-                    countCol = true;
+                if (c.col.fn === "MIN") {
+                    maxCol = c.alias ? '_.' + c.alias : c.col.args[0]
+                    arr_aggregate.push({ gtype: 'MIN', col: c.col.args[0], alias: c.alias })
+                }
+                if (c.col.fn === "SUM") {
+                    gtype = 'SUM';
+                    sumCol = c.alias ? '_.' + c.alias : c.col.args[0]
+                    arr_aggregate.push({ gtype: 'SUM', col: c.col.args[0], alias: c.alias })
+                }
+                if (c.col.fn === "AVG") {
+                    gtype = 'AVG';
+                    sumCol = c.alias ? '_.' + c.alias : c.col.args[0]
+                    arr_aggregate.push({ gtype: 'AVG', col: c.col.args[0], alias: c.alias })
+                }
+                if (c.col.fn === "STRING_AGG") {
+                    gtype = 'STRING_AGG';
+                    string_agg_col = c.alias ? '_.' + c.alias : c.col.args[0]
+                    delimiter = ', ';
+                    arr_aggregate.push({ gtype: 'STRING_AGG', col: c.col.args[0], delimiter: delimiter, alias: c.alias })
                 }
             });
             //
@@ -355,15 +368,36 @@ export default class mysql {
                 grrow[key].push(res[j]);
             }
             res = [...Object.values(grrow).filter((c) => c)];
+            console.log({ res })
             for (let i = 0; i <= res.length - 1; i++) {
                 let length = res[i].length;
-                if (maxCol) {
-                    res[i] = res[i].sort((b, a) => a[maxCol] - b[maxCol])[0]
-                    res[i]['_.COUNT'] = length;
-                } else {
-                    res[i] = res[i][res[i].length - 1]
-                    res[i]['_.COUNT'] = length;
-                }
+                let arr_res = [];
+                let currg
+                arr_aggregate.forEach((item) => {
+                    if (item.gtype == 'MAX') {
+                        let currg = res[i].sort((b, a) => a[item.col] - b[item.col])[0][item.col]
+                        arr_res[item.alias] = currg;
+                    } else if (item.gtype == 'MIN') {
+                        let currg = res[i].sort((a, b) => a[item.col] - b[item.col])[0][item.col]
+                        arr_res[item.alias] = currg;
+                    } else if (item.gtype == "SUM") {
+                        let currg = res[i].reduce((acc, a) => acc += a[item.col], 0)
+                        arr_res[item.alias] = currg;
+                    } else if (item.gtype == "AVG") {
+                        let currg = res[i].reduce((acc, a) => acc += a[item.col], 0) / res[i].length
+                        arr_res[item.alias] = currg;
+                    }
+                    else if (item.gtype == "STRING_AGG") {
+                        let currg = res[i].map((a) => a[item.col]).join(delimiter)
+                        arr_res[item.alias] = currg;
+                    }
+                });
+
+                res[i] = res[i][res[i].length - 1]
+                res[i]['_.COUNT'] = length;
+                Object.keys(arr_res).forEach((k) => {
+                    res[i][k] = arr_res[k]
+                })
             }
         }
 
@@ -391,6 +425,9 @@ export default class mysql {
         for (let i = 0; i <= r.col.length - 1; i++) {
             let _col = alias ? alias + '.' + r.col[i] : "" + r.col[i];
             for (let j = 0; j <= columns.length - 1; j++) {
+                if (columns[j].col.fn) {
+                    continue
+                }
                 let getCol = (obj) => {
                     if (obj.col.args) {
                         return obj.col.args[0];
@@ -406,6 +443,10 @@ export default class mysql {
             obj[_col] = r.data[j]?.[i];
         }
         for (let j = 0; j <= columns.length - 1; j++) {
+            if (columns[j].col.fn) {
+                continue
+            }
+
             if (columns[j].col != "*" && typeof columns[j].col == 'string' && !columns[j].col.includes('.')) {
                 obj['_.' + uuidv4()] = columns[j].col;
             }
