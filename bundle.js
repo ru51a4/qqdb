@@ -646,6 +646,10 @@ class mysql {
       let delimiter = '';
       let arr_aggregate = [];
       let g_alias;
+      let gtype;
+      let sumCol;
+      let maxCol;
+      let string_agg_col;
       _query.columns.forEach((c) => {
         g_alias = c.alias;
         if (c.col.fn === "MAX") {
