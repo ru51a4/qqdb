@@ -645,6 +645,7 @@ class mysql {
       //
       let delimiter = '';
       let arr_aggregate = [];
+      let g_alias;
       _query.columns.forEach((c) => {
         g_alias = c.alias;
         if (c.col.fn === "MAX") {
