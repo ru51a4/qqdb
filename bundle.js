@@ -629,15 +629,6 @@ class mysql {
       }
     }
     let b = performance.now();
-    //one col
-    if (_query.columns[0].col.includes(".") && _query.columns[0].col != "*" && _query.columns.length == 1) {
-      let __res = [];
-      for (let i = 0; i <= res.length - 1; i++) {
-        __res[i] = {};
-        __res[i][_query.columns[0].col] = res[i][_query.columns[0].col];
-      }
-      res = __res
-    }
 
     //group by
     if (_query.groupByColumns.length) {
@@ -728,6 +719,31 @@ class mysql {
       } else {
         res = res.sort((a, b) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
       }
+    }
+
+
+    //one col
+    if (_query.columns[0].col != "*") {
+      let __res = [];
+      for (let i = 0; i <= res.length - 1; i++) {
+        __res[i] = {};
+        _query.columns.forEach((c) => {
+          if (!c.fn) {
+            let col = c.alias ?? c.col;
+            if (res[i][col]) {
+              __res[i][col] = res[i][col];
+            }
+            if (res[i]['_.' + col]) {
+              __res[i]['_.' + col] = res[i]['_.' + col];
+            }
+
+          }
+        });
+        if (res[i]['_.COUNT']) {
+          __res[i]['_.COUNT'] = res[i]['._COUNT']
+        }
+      }
+      res = __res
     }
     mysql.cache_subquery[cache_key] = res;
     return res
