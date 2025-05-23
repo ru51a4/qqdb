@@ -409,8 +409,13 @@ export default class mysql {
                 __res[i] = {};
                 _query.columns.forEach((c) => {
                     if (!c.fn) {
+                        console.log({ c, r: res[i] })
                         let col = c.alias ?? c.col;
-                        if (res[i][col]) {
+                        if (c.alias) {
+                            __res[i]['_.' + col] = res[i][col];
+
+                        }
+                        else if (res[i][col]) {
                             __res[i][col] = res[i][col];
                         }
                         if (res[i]['_.' + col]) {
@@ -425,6 +430,7 @@ export default class mysql {
             }
             res = __res
         }
+
 
         mysql.cache_subquery[cache_key] = res;
         return res
