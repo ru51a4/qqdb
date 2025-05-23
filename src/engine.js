@@ -429,7 +429,7 @@ export default class mysql {
                         }
                     }
                 });
-                _arr = Object.keys(res[i]).filter((c) => !_arr.includes(c))
+                _arr = Object.keys(res[i]).filter((c) => c.includes('_.') && !_arr.includes(c))
                 _arr.forEach((c) => {
                     __res[i][c] = res[i][c]
                 });
