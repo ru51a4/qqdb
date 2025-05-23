@@ -142,7 +142,7 @@ export default class mysql {
                 let isLEFT_JOIN = _query.joins[j].type == "LEFT";
                 let right = _query.joins[j].exp[0].right.split(".");
                 let j_table_right = mysql.table[aliasTable[right[0]]];
-                let iRight = j_table_right?.col?.indexOf(right[1])
+                let iRight = j_table_right?.col?.indexOf(right[1]) ?? '_'
                 if (!mysql.cache[jt]?.[iRight]) {
                     if (!mysql.cache[jt]) {
                         mysql.cache[jt] = {};
@@ -218,12 +218,43 @@ export default class mysql {
             aliasTable[ja] = ja;
             _from = ja;
         }
-        if (!_query.whereClauses.find((c) => c?.next === 'OR') && (_query.whereClauses[0]?.type == ">" || _query.whereClauses[0]?.type == "<")) {
+        if (_query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
+            let __left = _query.whereClauses[1].left;
+            let __right = _query.whereClauses[1].right;
+            if (!__left.includes(".") && __right.includes(".")) {
+                let t = __left
+                __left = __right
+                __right = t;
+            }
+
+            let a_left = __left.split(".");
+            __left = a_left[1]
+            a_left = a_left[0];
+            a_left = aliasTable[a_left]
+            let iRight = mysql.table[a_left]?.col?.indexOf(__left)
+
+            if (!mysql.cache[a_left]?.[iRight]) {
+                if (!mysql.cache[a_left]) {
+                    mysql.cache[a_left] = {};
+                }
+                mysql.cache[a_left][iRight] = {};
+
+                mysql.table[a_left].data.forEach((c, i) => {
+                    if (!mysql.cache[a_left][iRight][c[iRight]]) {
+                        mysql.cache[a_left][iRight][c[iRight]] = [];
+                    }
+                    mysql.cache[a_left][iRight][c[iRight]].push(i);
+                });
+            }
+            let __val = prev ? prev[__right] ?? __right : __right;
+            loop = __val ? mysql.cache[a_left][iRight][__val] : mysql.table[a_left].data;
+        }
+        else if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && (_query.whereClauses[1]?.type == ">" || _query.whereClauses[1]?.type == "<")) {
             loop = [];
-            let ttype = _query.whereClauses[0]?.type;
-            let val = Number(prev?.[_query.whereClauses[0].right] ?? _query.whereClauses[0].right);
+            let ttype = _query.whereClauses[1]?.type;
+            let val = Number(prev?.[_query.whereClauses[1].right] ?? _query.whereClauses[1].right);
             let arr = mysql.table[_from].data;
-            let lt = _query.whereClauses[0]?.left.split(".");
+            let lt = _query.whereClauses[1]?.left.split(".");
             let coll = mysql.table[_from].col.indexOf(lt[1] ?? lt[0])
             if (!mysql.cache_sort[_from]) {
                 mysql.cache_sort[_from] = {};
@@ -320,12 +351,12 @@ export default class mysql {
             let grrow = [];
             //
             let delimiter = '';
+            let arr_aggregate = [];
             let g_alias;
             let gtype;
             let sumCol;
             let maxCol;
             let string_agg_col;
-            let arr_aggregate = [];
             _query.columns.forEach((c) => {
                 g_alias = c.alias;
                 if (c.col.fn === "MAX") {
@@ -404,7 +435,6 @@ export default class mysql {
                 res = res.sort((a, b) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
             }
         }
-
         //one col
         if (_query.columns[0].col != "*") {
             let __res = [];
@@ -416,27 +446,26 @@ export default class mysql {
                         let col = c.alias ?? c.col;
                         if (c.alias) {
                             __res[i]['_.' + col] = res[i][col];
-                            _arr.push(col);
+                            _arr[col] = true;
                         }
                         else if (res[i][col]) {
                             __res[i][col] = res[i][col];
-                            _arr.push(col);
+                            _arr[col] = true;
 
                         }
                         if (res[i]['_.' + col]) {
                             __res[i]['_.' + col] = res[i]['_.' + col];
-                            _arr.push('_.' + col);
+                            _arr['_.' + col] = true;
                         }
                     }
                 });
-                _arr = Object.keys(res[i]).filter((c) => c.includes('_.') && !_arr.includes(c))
+                _arr = Object.keys(res[i]).filter((c) => c.includes('_.') && !_arr[c])
                 _arr.forEach((c) => {
                     __res[i][c] = res[i][c]
                 });
             }
             res = __res
         }
-
 
         mysql.cache_subquery[cache_key] = res;
         return res
