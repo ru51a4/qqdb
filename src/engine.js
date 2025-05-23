@@ -320,6 +320,11 @@ export default class mysql {
             let grrow = [];
             //
             let delimiter = '';
+            let g_alias;
+            let gtype;
+            let sumCol;
+            let maxCol;
+            let string_agg_col;
             let arr_aggregate = [];
             _query.columns.forEach((c) => {
                 g_alias = c.alias;
