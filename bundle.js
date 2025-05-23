@@ -679,7 +679,6 @@ class mysql {
         grrow[key].push(res[j]);
       }
       res = [...Object.values(grrow).filter((c) => c)];
-      console.log({ res })
       for (let i = 0; i <= res.length - 1; i++) {
         let length = res[i].length;
         let arr_res = [];
@@ -725,26 +724,29 @@ class mysql {
       let __res = [];
       for (let i = 0; i <= res.length - 1; i++) {
         __res[i] = {};
+        let _arr = [];
         _query.columns.forEach((c) => {
           if (!c.fn) {
-            console.log({ c, r: res[i] })
             let col = c.alias ?? c.col;
             if (c.alias) {
               __res[i]['_.' + col] = res[i][col];
-
+              _arr.push(col);
             }
             else if (res[i][col]) {
               __res[i][col] = res[i][col];
+              _arr.push(col);
+
             }
             if (res[i]['_.' + col]) {
               __res[i]['_.' + col] = res[i]['_.' + col];
+              _arr.push('_.' + col);
             }
-
           }
         });
-        if (res[i]['_.COUNT']) {
-          __res[i]['_.COUNT'] = res[i]['._COUNT']
-        }
+        _arr = Object.keys(res[i]).filter((c) => !_arr.includes(c))
+        _arr.forEach((c) => {
+          __res[i][c] = res[i][c]
+        });
       }
       res = __res
     }
