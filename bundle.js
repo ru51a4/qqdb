@@ -533,7 +533,7 @@ class mysql {
       aliasTable[ja] = ja;
       _from = ja;
     }
-    if (_query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
+    if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
       let __left = _query.whereClauses[1].left;
       let __right = _query.whereClauses[1].right;
       if (!__left.includes(".") && __right.includes(".")) {
