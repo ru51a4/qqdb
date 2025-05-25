@@ -778,7 +778,7 @@ class mysql {
       let limit = Number(_query.limit?.[0]?.col)
       let offset = Number(_query.limit?.[1]?.col ?? 0)
       if (res.length >= limit + offset) {
-        res = res.filter((c, i) => i >= offset && i <= limit - 1)
+        res = res.filter((c, i) => i >= offset && i <= limit + offset - 1)
       }
     }
 
