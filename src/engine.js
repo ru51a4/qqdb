@@ -221,7 +221,7 @@ export default class mysql {
         if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
             let __left = _query.whereClauses[1].left;
             let __right = _query.whereClauses[1].right;
-            if (!__left.includes(".") && __right.includes(".")) {
+            if (!__left.includes(".") && __right.includes(".") || prev[__left]) {
                 let t = __left
                 __left = __right
                 __right = t;
