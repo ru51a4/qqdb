@@ -650,14 +650,7 @@ class mysql {
       rrow = rrow.filter((el) => ffilter(el, _query.whereClauses));
       //
       res.push(...rrow);
-      if (_query.limit?.[0]) {
-        let limit = Number(_query.limit?.[0]?.col)
-        let offset = Number(_query.limit?.[1]?.col ?? 0)
-        if (res.length >= limit + offset) {
-          res = res.filter((c, i) => i >= offset && i <= limit - 1)
-          break;
-        }
-      }
+
     }
     let b = performance.now();
 
@@ -780,6 +773,13 @@ class mysql {
         });
       }
       res = __res
+    }
+    if (_query.limit?.[0]) {
+      let limit = Number(_query.limit?.[0]?.col)
+      let offset = Number(_query.limit?.[1]?.col ?? 0)
+      if (res.length >= limit + offset) {
+        res = res.filter((c, i) => i >= offset && i <= limit - 1)
+      }
     }
 
     mysql.cache_subquery[cache_key] = res;
