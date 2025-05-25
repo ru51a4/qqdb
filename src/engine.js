@@ -160,7 +160,7 @@ export default class mysql {
                 for (let jj = 0; jj <= mysql.cache[jt]?.[iRight]?.[row[left[0] + '.' + left[1]]]?.length - 1; jj++) {
                     //
                     let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
-                    if (operation['='](left[0], right[0]) || operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+                    if (operation['='](left[0], right[0]) || j_table_right?.data?.[_jj]?.[iRight] && operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
                         let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
                         let __row = JSON.parse(JSON.stringify(row));
                         mysql.mergeObj(__row, currJoinRow)
