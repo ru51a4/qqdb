@@ -9,6 +9,7 @@ class Query {
   limit = []
 } class SimpleSqlParserJs {
   static build = (input, num) => {
+    /* токонезируем raw строку */
     input = input.split("").map((c) => c.toUpperCase());
     input = `( ${input.join("")} )`.split("\n").join(" ").split(",").join(" ").trim()
       .split("(").join(" ( ")
@@ -29,6 +30,7 @@ class Query {
       let typeJoin = '';
 
       let typeJoins = ["INNER", "LEFT", "RIGHT", "FULL"];
+      /* конченный автомат(?) ложим токены в отдельные массив (where/join/etc) для дальнейшей обработки */
       while (str.length) {
         let token = str.shift();
         if (token === 'SELECT') {
@@ -153,7 +155,7 @@ class Query {
 
       t = [];
       let alias = false;
-
+      /* рекурсивный спуск для парсинга условий в join/where */
       let deep = (arr) => {
         let t = [];
         for (let i = 0; i <= arr.length - 1; i++) {
@@ -176,12 +178,7 @@ class Query {
 
       for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
         if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
-          //todo
-          // nested exp in join on
-          //t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
-
           t[t.length - 1].exp.push(...deep(['AND', '1', '=', '1', query.joins[i]?.token?.fn, ...query.joins[i].token.args]))
-
         }
         else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
           t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
@@ -242,10 +239,13 @@ class Query {
       query.limit = t;
       return query;
     };
+    /* лексинг функций в SELECT, напр: MAX(id). так же тут лексяться выражения в where/join 1 OR (1 =2 OR (2 = 3)) */
     let lexfn = (arr, fn) => {
       return { fn, args: [...arr] }
     };
 
+    /* подготовка для рекурсивный спуск для 
+    подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам токены массивов в токены массивов)*/
     let t = [[]];
     let nested = (str) => {
       let tt = [];
@@ -286,6 +286,7 @@ class Query {
     }
     let prev = {};
     let stack = [];
+    //  Рекурсивный спуск(подзапросы), лексинг
     let deep = (arr, init = true) => {
 
       for (let i = 0; i <= arr.length - 1; i++) {
@@ -325,6 +326,7 @@ class mysql {
   static table = {};
 
   static query(str) {
+    /* индексы и кеши */
     mysql.cache = {};
     mysql.cache_subquery = {};
     mysql.cache_sort = {}
@@ -360,6 +362,7 @@ class mysql {
     let aliasTable = [];
     aliasTable[_query.fromSources[0].alias] = _query.fromSources[0].table;
     let rrow = [];
+    /* рекурсивный спуск (интерпретатор) для выражений в join/where */
     let ffilter = (el, arr) => {
       {
         let deep = (arr) => {
@@ -429,12 +432,14 @@ class mysql {
         return deep(arr)
       }
     }
+    /* join'ы обычным циклом сделать нельзя, используем рекурсию (для каждого обьеденения, и их обьеденения... создать элемент) */
     let join = (row, jj) => {
       for (let j = jj; j <= jj; j++) {
         let jt = _query.joins[j].table
         let ja = _query.joins[j].alias;
         if (typeof _query.joins[j].table === "object") {
           mysql.table[ja] = {};
+          //если в join подзапрос
           let subquery = mysql._query(_query.joins[j].table, row);
           if (!subquery.length) {
             return;
@@ -447,6 +452,7 @@ class mysql {
           aliasTable[ja] = jt;
         }
         let __left = _query.joins[j].exp[0].left.split(".");
+        //если надо меняем местами таблицы в JOIN ON 
         if (!row[__left[0] + '.' + __left[1]]) {
           let t = JSON.parse(JSON.stringify(_query.joins[j].exp[0].left));
           _query.joins[j].exp[0].left = _query.joins[j].exp[0].right;
@@ -458,6 +464,7 @@ class mysql {
         let right = _query.joins[j].exp[0].right.split(".");
         let j_table_right = mysql.table[aliasTable[right[0]]];
         let iRight = j_table_right?.col?.indexOf(right[1]) ?? '_'
+        /* hash join */
         if (!mysql.cache[jt]?.[iRight]) {
           if (!mysql.cache[jt]) {
             mysql.cache[jt] = {};
@@ -499,6 +506,7 @@ class mysql {
             }
           }
         }
+        /* если это left join, создадим элементы с null */
         if (!f && isLEFT_JOIN) {
           let __row = JSON.parse(JSON.stringify(row));
           let tt = {};
@@ -516,12 +524,14 @@ class mysql {
       }
     }
     //
+    //НАЧАЛО
     //MAIN
     //
     let a = performance.now();
     let loop = null;
     let _from = _query.fromSources[0].table;
     if (typeof _from === 'object') {
+      /* подзапрос в FROM */
       let ja = _query.fromSources[0].alias
       mysql.table[ja] = {};
       let subquery = mysql._query(_query.fromSources[0].table);
@@ -533,9 +543,11 @@ class mysql {
       aliasTable[ja] = ja;
       _from = ja;
     }
+    /* hash index, строим по первому = в усливие WHERE */
     if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
       let __left = _query.whereClauses[1].left;
       let __right = _query.whereClauses[1].right;
+      /* если надо меняем местами колонки в WHERE*/
       if (!__left.includes(".") && __right.includes(".") || prev[__left]) {
         let t = __left
         __left = __right
@@ -564,6 +576,7 @@ class mysql {
       let __val = prev ? prev[__right] ?? __right : __right;
       loop = __val ? mysql.cache[a_left][iRight][__val] : mysql.table[a_left].data;
     }
+    // bst tree aka индексы для > и <
     else if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && (_query.whereClauses[1]?.type == ">" || _query.whereClauses[1]?.type == "<")) {
       loop = [];
       let ttype = _query.whereClauses[1]?.type;
@@ -636,6 +649,7 @@ class mysql {
       loop = mysql.table[_from].data.length
     }
     loop = Array.isArray(loop) ? loop : Array.from({ length: loop }, (_, i) => i);
+    /* проходим по таблице, join'им и where'ем */
     for (let ki = 0; ki <= loop.length - 1; ki++) {
       let i = loop[ki]
       let row = mysql.getObj(_from, i, _query.fromSources[0].alias, _query.columns);
@@ -692,7 +706,7 @@ class mysql {
           arr_aggregate.push({ gtype: 'STRING_AGG', col: c.col.args[0], delimiter: delimiter, alias: c.alias })
         }
       });
-      //
+      //group by по колонкам
       for (let j = 0; j <= res.length - 1; j++) {
         let key = _query.groupByColumns.reduce((acc, a) => {
           return acc + a.col + '-' + "(" + res[j][a.col] + ")"
@@ -726,9 +740,10 @@ class mysql {
             arr_res[item.alias] = currg;
           }
         });
-
         res[i] = res[i][res[i].length - 1]
+        /* добавляем колонку с кол-вом в результат */
         res[i]['_.COUNT'] = length;
+        /* добавляем аггрегирующие функции к результату */
         Object.keys(arr_res).forEach((k) => {
           res[i][k] = arr_res[k]
         })
@@ -743,7 +758,7 @@ class mysql {
         res = res.sort((a, b) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
       }
     }
-    //one col
+    //one col оставляем только нужные колонки
     if (_query.columns[0].col != "*") {
       let __res = [];
       for (let i = 0; i <= res.length - 1; i++) {
@@ -774,6 +789,7 @@ class mysql {
       }
       res = __res
     }
+    //OFFSET && LIMIT
     if (_query.limit?.[0]) {
       let limit = Number(_query.limit?.[0]?.col)
       let offset = Number(_query.limit?.[1]?.col ?? 0)
@@ -785,13 +801,14 @@ class mysql {
     mysql.cache_subquery[cache_key] = res;
     return res
   }
-
+  /* при join сливаем колонки из 2 таблиц */
   static mergeObj(obj, obj2) {
     Object.keys(obj2).forEach((key) => {
       obj[key] = obj2[key];
     })
   }
 
+  /* Получаем элемент строки таблицы */
   static getObj(table, j, alias, columns) {
     let obj = {};
     let r = mysql.table[table];

@@ -10,6 +10,7 @@ class Query {
 }
 export default class SimpleSqlParserJs {
     static build = (input, num) => {
+        /* токонезируем raw строку */
         input = input.split("").map((c) => c.toUpperCase());
         input = `( ${input.join("")} )`.split("\n").join(" ").split(",").join(" ").trim()
             .split("(").join(" ( ")
@@ -30,6 +31,7 @@ export default class SimpleSqlParserJs {
             let typeJoin = '';
 
             let typeJoins = ["INNER", "LEFT", "RIGHT", "FULL"];
+            /* конченный автомат(?) ложим токены в отдельные массив (where/join/etc) для дальнейшей обработки */
             while (str.length) {
                 let token = str.shift();
                 if (token === 'SELECT') {
@@ -154,7 +156,7 @@ export default class SimpleSqlParserJs {
 
             t = [];
             let alias = false;
-
+            /* рекурсивный спуск для парсинга условий в join/where */
             let deep = (arr) => {
                 let t = [];
                 for (let i = 0; i <= arr.length - 1; i++) {
@@ -177,12 +179,7 @@ export default class SimpleSqlParserJs {
 
             for (let i = 0; i <= query.joins.length - 1; i = i + 1) {
                 if (query.joins[i]?.token?.fn == "OR" || query.joins[i]?.token?.fn == "AND") {
-                    //todo
-                    // nested exp in join on
-                    //t[t.length - 1].exp.push({ 'ttype': query.joins[i].token?.fn, '__val': deep(query.joins[i].token.args).t, 'right': 1, 'type': "=" })
-
                     t[t.length - 1].exp.push(...deep(['AND', '1', '=', '1', query.joins[i]?.token?.fn, ...query.joins[i].token.args]))
-
                 }
                 else if (query.joins[i]?.token === 'ON' || query.joins[i]?.token === 'AND' || query.joins[i]?.token === 'OR') {
                     t[t.length - 1].exp.push({ 'ttype': query.joins[i].token, 'left': query.joins[i + 1]?.token, 'right': query.joins[i + 3]?.token, 'type': query.joins[i + 2]?.token })
@@ -243,10 +240,13 @@ export default class SimpleSqlParserJs {
             query.limit = t;
             return query;
         };
+        /* лексинг функций в SELECT, напр: MAX(id). так же тут лексяться выражения в where/join 1 OR (1 =2 OR (2 = 3)) */
         let lexfn = (arr, fn) => {
             return { fn, args: [...arr] }
         };
 
+        /* подготовка для рекурсивный спуск для 
+        подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам токены массивов в токены массивов)*/
         let t = [[]];
         let nested = (str) => {
             let tt = [];
@@ -287,6 +287,7 @@ export default class SimpleSqlParserJs {
         }
         let prev = {};
         let stack = [];
+        //  Рекурсивный спуск(подзапросы), лексинг
         let deep = (arr, init = true) => {
 
             for (let i = 0; i <= arr.length - 1; i++) {
