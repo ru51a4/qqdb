@@ -372,14 +372,14 @@ class mysql {
             let left = arr[j].left;
             left = el[left] ?? arr[j].left;
             let right = arr[j].right;
-
+            /* обработка вложенных условий (1 = 1 OR ( 2 = 1 ) ) */
             if (arr[j].arr && arr[j].type != 'IN') {
               res.push(arr[j].type)
               res.push(deep(arr[j].arr))
             } else if (arr[j].type == "IN") {
               let t = [];
               if (arr[j].right.columns) {
-
+                /* обработка подзапросов в IN */
                 let tt = mysql._query(arr[j].right, el);
                 let _right = [];
                 for (let l = 0; l <= tt.length - 1; l++) {
@@ -387,6 +387,7 @@ class mysql {
                 }
                 t = _right
               }
+              /* обработка букавоф/цыферов в in*/
               if (arr[j].right.args) {
                 t = arr[j].right.args;
               }
@@ -483,8 +484,10 @@ class mysql {
           //
           let _jj = mysql.cache[jt][iRight][row[left[0] + '.' + left[1]]][jj];
           if (operation['='](left[0], right[0]) || j_table_right?.data?.[_jj]?.[iRight] && operation['='](row[left[0] + '.' + left[1]], j_table_right.data[_jj][iRight])) {
+            //Получить элемент из таблицы JOIN
             let currJoinRow = mysql.getObj(jt, _jj, ja, _query.columns);
             let __row = JSON.parse(JSON.stringify(row));
+            //сливаем элемент из таблицы JOIN и прошлый элемент
             mysql.mergeObj(__row, currJoinRow)
             let expp = JSON.parse(JSON.stringify(_query.joins[j].exp));
             for (let d = 0; d <= expp.length - 1; d++) {
@@ -495,12 +498,14 @@ class mysql {
             expp[0].left = 1;
             expp[0].right = 1;
             expp[0].type = "="
-
+            //обработка усливий в JOIN ON
             if (ffilter(__row, expp)) {
               f = true
+              //Если join'ы кончились добавляем элемент в результ
               if (_query.joins.length - 1 == j) {
                 rrow.push(__row);
               } else if (_query.joins.length - 1 - j > 0) {
+                //рекурсинво взываем следующию таблицу join
                 join(__row, j + 1)
               }
             }
@@ -652,6 +657,7 @@ class mysql {
     /* проходим по таблице, join'им и where'ем */
     for (let ki = 0; ki <= loop.length - 1; ki++) {
       let i = loop[ki]
+      //Получить элемент из таблицы FROM
       let row = mysql.getObj(_from, i, _query.fromSources[0].alias, _query.columns);
       //join
       rrow = [];
@@ -661,6 +667,7 @@ class mysql {
       else {
         rrow.push(row);
       }
+      //Оставляем только те которые прошли where
       rrow = rrow.filter((el) => ffilter(el, _query.whereClauses));
       //
       res.push(...rrow);
