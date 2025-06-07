@@ -160,7 +160,7 @@ export default class SimpleSqlParserJs {
             let deep = (arr) => {
                 let t = [];
                 for (let i = 0; i <= arr.length - 1; i++) {
-                    if (arr[i].fn && arr[i].fn !== "IN") {
+                    if (arr[i].fn && arr[i].fn !== "IN" && arr[i].fn !== 'COUNT') {
                         let tt = deep(arr[i].args)
                         t.push({ "arr": tt, 'type': arr[i].fn })
                     }
@@ -205,16 +205,8 @@ export default class SimpleSqlParserJs {
 
 
             t = [];
-            for (let i = 0; i <= query.havingClauses.length - 1; i = i + 3) {
-                let next = (query.havingClauses[i + 3]);
-                if (next) {
-                    t.push({ "next": next, "left": query.havingClauses[i], 'right': query.havingClauses[i + 2], 'type': query.havingClauses[i + 1] })
-                    i++
-                }
-                else {
-                    t.push({ "left": query.havingClauses[i], 'right': query.havingClauses[i + 2], 'type': query.havingClauses[i + 1] })
-                }
-            }
+            t.push(...deep(['1', '=', '1', 'AND', ...query.havingClauses]))
+
             query.havingClauses = t;
 
             t = [];

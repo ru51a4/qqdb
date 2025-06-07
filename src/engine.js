@@ -86,6 +86,9 @@ export default class mysql {
                             res.push(val)
 
                         } else {
+                            if (left.fn == 'COUNT') {
+                                left = el['_.COUNT'];
+                            }
                             if (!operation[arr[j].type](left, el[right] ?? ((prev && prev[right]) ? prev[right] : right))) {
                                 val = 0;
                             } else {
@@ -440,6 +443,8 @@ export default class mysql {
                 })
             }
         }
+        //HAVING
+        res = res.filter((el) => ffilter(el, _query.havingClauses));
 
         //ORDER BY
         if (_query.sortColumns.length) {
