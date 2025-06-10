@@ -215,10 +215,9 @@ export default class SimpleSqlParserJs {
             }
             query.groupByColumns = t;
             t = [];
-            for (let i = 0; i <= query.sortColumns.length - 1; i = i + 2) {
-
+            for (let i = 0; i <= query.sortColumns.length - 1; i++) {
                 t.push({ "col": query.sortColumns[i], 'type': query.sortColumns[i + 1] })
-                i++
+                i++;
             }
             query.sortColumns = t;
             t = [];

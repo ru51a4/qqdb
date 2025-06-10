@@ -14,7 +14,7 @@ SELECT: col alias
 FROM: subquery, alias  
 WHERE : <, >, =, <>, AND, OR, NESTED (1 = 1 AND (1 = 1)), IN(ids, subquery)  
 JOIN, LEFT JOIN: subquery, hash join, nested exp in ON - like a where  
-ORDER BY: DESC, ASC (one col)  
+ORDER BY: DESC, ASC (multiple cols)  
 GROUP BY: multiple cols + function(max, min, avg, string_agg) + HAVING (nested exp like a where + COUNT(*))  
 LIMIT, OFFSET  
 PERFOMANCE aka indexes: hash index(first exp(=) in where), bst index(first exp(<,>) in where).  

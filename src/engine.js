@@ -448,10 +448,13 @@ export default class mysql {
 
         //ORDER BY
         if (_query.sortColumns.length) {
-            if (_query.sortColumns[0].type == "DESC") {
-                res = res.sort((b, a) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
-            } else {
-                res = res.sort((a, b) => a[_query.sortColumns[0].col] - b[_query.sortColumns[0].col])
+            for (let i = _query.sortColumns.length - 1; i >= 0; i--) {
+                let rr = _query.sortColumns[i]
+                if (rr.type == "DESC") {
+                    res = res.sort((b, a) => a[rr.col] - b[rr.col])
+                } else {
+                    res = res.sort((a, b) => a[rr.col] - b[rr.col])
+                }
             }
         }
         //one col оставляем только нужные колонки
