@@ -160,7 +160,7 @@ class SimpleSqlParserJs {
       let deep = (arr) => {
         let t = [];
         for (let i = 0; i <= arr.length - 1; i++) {
-          if (arr[i].fn && arr[i].fn !== "IN" && arr[i].fn !== 'COUNT') {
+          if (arr[i].fn && arr[i].fn !== "NOT IN" && arr[i].fn !== "IN" && arr[i].fn !== 'COUNT') {
             let tt = deep(arr[i].args)
             t.push({ "arr": tt, 'type': arr[i].fn })
           }
