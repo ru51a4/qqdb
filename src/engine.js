@@ -60,7 +60,7 @@ export default class mysql {
                         if (arr[j].arr && arr[j].type != 'IN') {
                             res.push(arr[j].type)
                             res.push(deep(arr[j].arr))
-                        } else if (arr[j].type == "IN") {
+                        } else if (arr[j].type == "NOT IN" || arr[j].type == "IN") {
                             let t = [];
                             if (arr[j].right.columns) {
                                 /* обработка подзапросов в IN */
@@ -79,6 +79,9 @@ export default class mysql {
                                 val = 0
                             } else {
                                 val = 1
+                            }
+                            if (arr[j].type !== "IN") {
+                                val = !val;
                             }
                             if (arr[j].ttype == "AND" || arr[j].ttype == "OR") {
                                 res.push(arr[j].ttype)

@@ -7,7 +7,8 @@ class Query {
   groupByColumns = [];
   sortColumns = [];
   limit = []
-} class SimpleSqlParserJs {
+}
+class SimpleSqlParserJs {
   static build = (input, num) => {
     /* токонезируем raw строку */
     input = input.split("").map((c) => c.toUpperCase());
@@ -166,11 +167,11 @@ class Query {
           if (arr[i] == '=' || arr[i] == '<>' || arr[i] == '<' || arr[i] == '>') {
             t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': arr[i] })
           }
-          if (arr[i] === "IN") {
-            t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': 'IN' })
+          if (arr[i] === "IN" || arr[i] === "NOT IN") {
+            t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': arr[i] })
           }
-          if (arr[i]?.fn === "IN") {
-            t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i], 'type': 'IN' })
+          if (arr[i]?.fn === "IN" || arr[i]?.fn === "NOT IN") {
+            t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i], 'type': arr[i] })
           }
         }
         return t;
@@ -367,7 +368,7 @@ class mysql {
             if (arr[j].arr && arr[j].type != 'IN') {
               res.push(arr[j].type)
               res.push(deep(arr[j].arr))
-            } else if (arr[j].type == "IN") {
+            } else if (arr[j].type == "NOT IN" || arr[j].type == "IN") {
               let t = [];
               if (arr[j].right.columns) {
                 /* обработка подзапросов в IN */
@@ -386,6 +387,9 @@ class mysql {
                 val = 0
               } else {
                 val = 1
+              }
+              if (arr[j].type !== "IN") {
+                val = !val;
               }
               if (arr[j].ttype == "AND" || arr[j].ttype == "OR") {
                 res.push(arr[j].ttype)

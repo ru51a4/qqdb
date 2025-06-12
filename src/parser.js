@@ -167,11 +167,11 @@ export default class SimpleSqlParserJs {
                     if (arr[i] == '=' || arr[i] == '<>' || arr[i] == '<' || arr[i] == '>') {
                         t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': arr[i] })
                     }
-                    if (arr[i] === "IN") {
-                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': 'IN' })
+                    if (arr[i] === "IN" || arr[i] === "NOT IN") {
+                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i + 1], 'type': arr[i] })
                     }
-                    if (arr[i]?.fn === "IN") {
-                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i], 'type': 'IN' })
+                    if (arr[i]?.fn === "IN" || arr[i]?.fn === "NOT IN") {
+                        t.push({ ttype: arr[i - 2] ?? '', "left": arr[i - 1], 'right': arr[i], 'type': arr[i] })
                     }
                 }
                 return t;
