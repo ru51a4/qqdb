@@ -57,10 +57,11 @@ export default class mysql {
                         left = el[left] ?? arr[j].left;
                         let right = arr[j].right;
                         /* обработка вложенных условий (1 = 1 OR ( 2 = 1 ) ) */
+                        console.log(arr)
                         if (arr[j].arr && arr[j].type != 'IN') {
                             res.push(arr[j].type)
                             res.push(deep(arr[j].arr))
-                        } else if (arr[j].type == "NOT IN" || arr[j].type == "IN") {
+                        } else if (arr[j].type == "NOT IN" || arr[j].type == "IN" || arr[j].type?.fn == "NOT IN" || arr[j].type?.fn == "IN") {
                             let t = [];
                             if (arr[j].right.columns) {
                                 /* обработка подзапросов в IN */
@@ -80,7 +81,7 @@ export default class mysql {
                             } else {
                                 val = 1
                             }
-                            if (arr[j].type !== "IN") {
+                            if (arr[j].type.fn != 'IN' && arr[j].type !== "IN") {
                                 val = !val;
                             }
                             if (arr[j].ttype == "AND" || arr[j].ttype == "OR") {

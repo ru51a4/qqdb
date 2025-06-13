@@ -165,11 +165,7 @@ GROUP BY P.DIARY_ID ) PP ON D.ID = PP.DIARY_ID
 JOIN USERS U ON D.USER_ID = U.ID
 ORDER BY PP.PID DESC`;
         } else {
-            document.querySelector('textarea').value = `SELECT * FROM iblock_elements el WHERE el.iblock_id IN (
-SELECT ib.id FROM iblock ib
-JOIN (SELECT * FROM iblock b where b.id = 2) gg on 1 = 1
-WHERE ib.left > gg.left OR ib.left = gg.left AND ib.right < gg.right OR ib.right = gg.right
-)
+            document.querySelector('textarea').value = `SELECT * FROM iblock_elements el WHERE el.iblock_id IN (3,4)
 `
         }
         table();
