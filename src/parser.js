@@ -31,7 +31,7 @@ export default class SimpleSqlParserJs {
             let typeJoin = '';
 
             let typeJoins = ["INNER", "LEFT", "RIGHT", "FULL"];
-            /* конченный автомат(?) ложим токены в отдельные массив (where/join/etc) для дальнейшей обработки */
+            /* конечный автомат(?) ложим токены в отдельные массивы (where/join/etc) для дальнейшей обработки */
             while (str.length) {
                 let token = str.shift();
                 if (token === 'SELECT') {
@@ -231,13 +231,13 @@ export default class SimpleSqlParserJs {
             query.limit = t;
             return query;
         };
-        /* лексинг функций в SELECT, напр: MAX(id). так же тут лексяться выражения в where/join 1 OR (1 =2 OR (2 = 3)) */
+        /* лексинг функций в SELECT, напр: MAX(id). так же тут лексятся выражения в where/join 1 OR (1 = 2 OR (2 = 3)) */
         let lexfn = (arr, fn) => {
             return { fn, args: [...arr] }
         };
 
         /* подготовка для рекурсивный спуск для 
-        подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам токены массивов в токены массивов)*/
+        подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам массив токенов в массив токенов)*/
         let t = [[]];
         let nested = (str) => {
             let tt = [];

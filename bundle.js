@@ -31,7 +31,7 @@ class SimpleSqlParserJs {
       let typeJoin = '';
 
       let typeJoins = ["INNER", "LEFT", "RIGHT", "FULL"];
-      /* конченный автомат(?) ложим токены в отдельные массив (where/join/etc) для дальнейшей обработки */
+      /* конечный автомат(?) ложим токены в отдельные массивы (where/join/etc) для дальнейшей обработки */
       while (str.length) {
         let token = str.shift();
         if (token === 'SELECT') {
@@ -231,13 +231,13 @@ class SimpleSqlParserJs {
       query.limit = t;
       return query;
     };
-    /* лексинг функций в SELECT, напр: MAX(id). так же тут лексяться выражения в where/join 1 OR (1 =2 OR (2 = 3)) */
+    /* лексинг функций в SELECT, напр: MAX(id). так же тут лексятся выражения в where/join 1 OR (1 = 2 OR (2 = 3)) */
     let lexfn = (arr, fn) => {
       return { fn, args: [...arr] }
     };
 
     /* подготовка для рекурсивный спуск для 
-    подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам токены массивов в токены массивов)*/
+    подзапросов (смотрим на открывющиеся скобки и закрывающиеся - вкладывам массив токенов в массив токенов)*/
     let t = [[]];
     let nested = (str) => {
       let tt = [];
@@ -365,7 +365,6 @@ class mysql {
             left = el[left] ?? arr[j].left;
             let right = arr[j].right;
             /* обработка вложенных условий (1 = 1 OR ( 2 = 1 ) ) */
-            console.log(arr)
             if (arr[j].arr && arr[j].type != 'IN') {
               res.push(arr[j].type)
               res.push(deep(arr[j].arr))
@@ -389,6 +388,7 @@ class mysql {
               } else {
                 val = 1
               }
+              //NOT IN
               if (arr[j].type.fn != 'IN' && arr[j].type !== "IN") {
                 val = !val;
               }
@@ -504,7 +504,7 @@ class mysql {
               if (_query.joins.length - 1 == j) {
                 rrow.push(__row);
               } else if (_query.joins.length - 1 - j > 0) {
-                //рекурсинво взываем следующию таблицу join
+                //рекурсивно взываем следующию таблицу join
                 join(__row, j + 1)
               }
             }
@@ -548,11 +548,11 @@ class mysql {
       _from = ja;
     }
     /* hash index, строим по первому = в усливие WHERE */
-    if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && (_query.whereClauses[1]?.left.includes(".") || _query.whereClauses[1]?.right.includes("."))) {
+    if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && ((_query.whereClauses[1]?.left.includes(".") && !_query.whereClauses[1]?.right.includes(".")) || (!_query.whereClauses[1]?.left.includes(".") && _query.whereClauses[1]?.right.includes(".")))) {
       let __left = _query.whereClauses[1].left;
       let __right = _query.whereClauses[1].right;
       /* если надо меняем местами колонки в WHERE*/
-      if (!__left.includes(".") && __right.includes(".") || prev[__left]) {
+      if (!__left.includes(".") && __right.includes(".") || (prev && prev[__left])) {
         let t = __left
         __left = __right
         __right = t;
@@ -563,22 +563,25 @@ class mysql {
       a_left = a_left[0];
       a_left = aliasTable[a_left]
       let iRight = mysql.table[a_left]?.col?.indexOf(__left)
-
-      if (!mysql.cache[a_left]?.[iRight]) {
-        if (!mysql.cache[a_left]) {
-          mysql.cache[a_left] = {};
-        }
-        mysql.cache[a_left][iRight] = {};
-
-        mysql.table[a_left].data.forEach((c, i) => {
-          if (!mysql.cache[a_left][iRight][c[iRight]]) {
-            mysql.cache[a_left][iRight][c[iRight]] = [];
+      if (a_left) {
+        if (!mysql.cache[a_left]?.[iRight]) {
+          if (!mysql.cache[a_left]) {
+            mysql.cache[a_left] = {};
           }
-          mysql.cache[a_left][iRight][c[iRight]].push(i);
-        });
+          mysql.cache[a_left][iRight] = {};
+
+          mysql.table[a_left].data.forEach((c, i) => {
+            if (!mysql.cache[a_left][iRight][c[iRight]]) {
+              mysql.cache[a_left][iRight][c[iRight]] = [];
+            }
+            mysql.cache[a_left][iRight][c[iRight]].push(i);
+          });
+        }
+        let __val = prev ? prev[__right] ?? __right : __right;
+        loop = __val ? mysql.cache[a_left][iRight][__val] : mysql.table[a_left].data;
+      } else {
+        loop = mysql.table[_from].data.length
       }
-      let __val = prev ? prev[__right] ?? __right : __right;
-      loop = __val ? mysql.cache[a_left][iRight][__val] : mysql.table[a_left].data;
     }
     // bst tree aka индексы для > и <
     else if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && (_query.whereClauses[1]?.type == ">" || _query.whereClauses[1]?.type == "<")) {
@@ -587,68 +590,72 @@ class mysql {
       let val = Number(prev?.[_query.whereClauses[1].right] ?? _query.whereClauses[1].right);
       let arr = mysql.table[_from].data;
       let lt = _query.whereClauses[1]?.left.split(".");
-      let coll = mysql.table[_from].col.indexOf(lt[1] ?? lt[0])
-      if (!mysql.cache_sort[_from]) {
-        mysql.cache_sort[_from] = {};
+      if (aliasTable[lt[0]]) {
+        let coll = mysql.table[_from].col.indexOf(lt[1] ?? lt[0])
+        if (!mysql.cache_sort[_from]) {
+          mysql.cache_sort[_from] = {};
+        }
+        let deep = (arr) => {
+          if (!arr.length) {
+            return
+          }
+          let _node = {};
+          var middle = arr[Math.floor((arr.length - 1) / 2)];
+          _node.val = middle.val;
+          _node.i = middle.i
+          _node.left = deep(arr.filter((c, i) => i < Math.floor((arr.length - 1) / 2)));
+          _node.right = deep(arr.filter((c, i) => i > Math.floor((arr.length - 1) / 2)));
+          return _node;
+        }
+        if (!mysql.cache_sort[_from][coll]) {
+          let root = deep(arr.map((c, i) => { return { val: [...c], i: i } }).sort((a, b) => a[coll] - b[coll]));
+          mysql.cache_sort[_from][coll] = { root: root };
+        }
+        let root = mysql.cache_sort[_from][coll].root;
+        let dfs = (node) => {
+          if (Number(node.val[coll]) == Number(val)) {
+            if (ttype == "<" && node.left) {
+              dfs(node.left)
+            }
+            if (ttype == ">" && node.right) {
+              dfs(node.right)
+            }
+          }
+          if (ttype == "<" && Number(node.val[coll]) > val) {
+            if (node.left) {
+              dfs(node.left)
+            }
+          }
+          if (ttype == "<" && Number(node.val[coll]) < val) {
+            loop.push(node.i)
+            if (node.left) {
+              dfs(node.left)
+            }
+            if (node.right) {
+              dfs(node.right)
+            }
+          }
+          //
+          if (ttype == ">" && Number(node.val[coll]) < val) {
+            if (node.right) {
+              dfs(node.right)
+            }
+          }
+          if (ttype == ">" && Number(node.val[coll]) > val) {
+            loop.push(node.i)
+            if (node.right) {
+              dfs(node.right)
+            }
+            if (node.left) {
+              dfs(node.left)
+            }
+          }
+        }
+        dfs(root)
+        loop = loop.sort((a, b) => a - b)
+      } else {
+        loop = mysql.table[_from].data.length
       }
-      let deep = (arr) => {
-        if (!arr.length) {
-          return
-        }
-        let _node = {};
-        var middle = arr[Math.floor((arr.length - 1) / 2)];
-        _node.val = middle.val;
-        _node.i = middle.i
-        _node.left = deep(arr.filter((c, i) => i < Math.floor((arr.length - 1) / 2)));
-        _node.right = deep(arr.filter((c, i) => i > Math.floor((arr.length - 1) / 2)));
-        return _node;
-      }
-      if (!mysql.cache_sort[_from][coll]) {
-        let root = deep(arr.map((c, i) => { return { val: [...c], i: i } }).sort((a, b) => a[coll] - b[coll]));
-        mysql.cache_sort[_from][coll] = { root: root };
-      }
-      let root = mysql.cache_sort[_from][coll].root;
-      let dfs = (node) => {
-        if (Number(node.val[coll]) == Number(val)) {
-          if (ttype == "<" && node.left) {
-            dfs(node.left)
-          }
-          if (ttype == ">" && node.right) {
-            dfs(node.right)
-          }
-        }
-        if (ttype == "<" && Number(node.val[coll]) > val) {
-          if (node.left) {
-            dfs(node.left)
-          }
-        }
-        if (ttype == "<" && Number(node.val[coll]) < val) {
-          loop.push(node.i)
-          if (node.left) {
-            dfs(node.left)
-          }
-          if (node.right) {
-            dfs(node.right)
-          }
-        }
-        //
-        if (ttype == ">" && Number(node.val[coll]) < val) {
-          if (node.right) {
-            dfs(node.right)
-          }
-        }
-        if (ttype == ">" && Number(node.val[coll]) > val) {
-          loop.push(node.i)
-          if (node.right) {
-            dfs(node.right)
-          }
-          if (node.left) {
-            dfs(node.left)
-          }
-        }
-      }
-      dfs(root)
-      loop = loop.sort((a, b) => a - b)
     } else {
       loop = mysql.table[_from].data.length
     }
