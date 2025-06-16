@@ -240,7 +240,10 @@ export default class mysql {
             _from = ja;
         }
         /* hash index, строим по первому = в усливие WHERE */
-        if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "=" && ((_query.whereClauses[1]?.left.includes(".") && !_query.whereClauses[1]?.right.includes(".")) || (!_query.whereClauses[1]?.left.includes(".") && _query.whereClauses[1]?.right.includes(".")))) {
+        if (!_query.whereClauses.find((c) => c?.ttype === 'OR') && _query.whereClauses[1]?.type == "="
+            && (
+                (_query.whereClauses[1]?.left.includes(".") && (!_query.whereClauses[1]?.right.includes(".") || prev?.[_query.whereClauses[1]?.right])) ||
+                ((!_query.whereClauses[1]?.left.includes(".") || prev[_query.whereClauses[1]?.left]) && _query.whereClauses[1]?.right.includes(".")))) {
             let __left = _query.whereClauses[1].left;
             let __right = _query.whereClauses[1].right;
             /* если надо меняем местами колонки в WHERE*/
