@@ -165,11 +165,22 @@ GROUP BY P.DIARY_ID ) PP ON D.ID = PP.DIARY_ID
 JOIN USERS U ON D.USER_ID = U.ID
 ORDER BY PP.PID DESC`;
         } else {
-            document.querySelector('textarea').value = `SELECT * FROM iblock_elements el WHERE el.iblock_id IN (
-SELECT ib.id FROM iblock ib
-JOIN (SELECT * FROM iblock b where b.id = 2) gg on 1 = 1
-WHERE ib.left > gg.left OR ib.left = gg.left AND ib.right < gg.right OR ib.right = gg.right
-)
+            document.querySelector('textarea').value = `SELECT *
+FROM iblock_elements el
+         JOIN iblock_properties p on 1 = 1
+    AND p.iblock_id IN (SELECT i.id
+                        FROM iblock i
+                                 JOIN iblock ic on 1 = 1 AND ic.id = el.iblock_id
+                        WHERE i.left < ic.left
+                           OR i.left = ic.left AND i.right > ic.right
+                           OR i.right = ic.right)
+         JOIN iblock_prop_value pv on pv.prop_id = p.id AND pv.el_id = el.id
+WHERE el.iblock_id IN (SELECT ib.id
+                       FROM iblock ib
+                                JOIN (SELECT * FROM iblock b where b.id = 2) gg on 1 = 1
+                       WHERE ib.left > gg.left
+                          OR ib.left = gg.left AND ib.right < gg.right
+                          OR ib.right = gg.right)
 `
         }
         table();
