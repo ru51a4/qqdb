@@ -34,7 +34,20 @@
 <body>
     <div class="container">
         <div class="mt-5 row justify-content-center">
-            <img src="">
+            <div style="display: flex;justify-content: center;">
+                <pre>
+feature:  
+SELECT: col alias  
+FROM: subquery, alias  
+WHERE : <, >, =, <>, AND, OR, NESTED (1 = 1 AND (1 = 1)), IN(ids, subquery), NOT IN  
+JOIN, LEFT JOIN: subquery, hash join, nested exp in ON - like a where  
+ORDER BY: DESC, ASC (multiple cols)  
+GROUP BY: multiple cols + function(max, min, avg, string_agg) + HAVING (nested exp like a where + COUNT(*))  
+LIMIT, OFFSET  
+PERFOMANCE aka indexes: hash index(first exp(=) in where), bst index(first exp(<,>) in where).  
+sqlite(eav) output in console
+                </pre>
+            </div>
             <div class="col-2">
                 <select onchange="change(event)">
                     <option value="1">diaries</option>
