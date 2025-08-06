@@ -183,8 +183,7 @@ FROM iblock_elements el
                                  JOIN iblocks ic on 1 = 1 AND ic.id = el.iblock_id
                         WHERE 1 = 1
                           AND (i.left < ic.left OR i.left = ic.left)
-                          AND (i.right > ic.right
-                            OR i.right = ic.right))
+                          AND (i.right > ic.right OR i.right = ic.right))
          JOIN iblock_prop_values pv on pv.prop_id = p.id AND pv.el_id = el.id
 WHERE el.iblock_id IN (SELECT ib.id
                        FROM iblocks ib
