@@ -188,7 +188,7 @@ FROM iblock_elements el
          JOIN iblock_prop_values pv on pv.prop_id = p.id AND pv.el_id = el.id
 WHERE el.iblock_id IN (SELECT ib.id
                        FROM iblocks ib
-                                JOIN (SELECT * FROM iblocks b where b.id = 3) gg on 1 = 1
+                                JOIN (SELECT * FROM iblocks b where b.id = 2) gg on 1 = 1
                        WHERE 1 = 1
                          AND (ib.left > gg.left OR ib.left = gg.left)
                          AND (ib.right < gg.right OR ib.right = gg.right))
