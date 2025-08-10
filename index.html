@@ -9,6 +9,8 @@
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
     <link rel="icon" href="favicon.webp">
+    <link rel="stylesheet" data-name="vs/editor/editor.main"
+        href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css">
 
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
@@ -32,6 +34,11 @@
 </head>
 
 <body>
+    <script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs' } }</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.nls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.js"></script>
+
     <div class="container">
         <div class="mt-5 row justify-content-center">
             <div style="display: flex;justify-content: center;">
@@ -63,14 +70,7 @@ sqlite(eav) output in console
                 </div>
                 <img style="width:30px; cursor: pointer;margin-left: auto; display: flex; margin-bottom: 10px;"
                     onclick="run()" src="exec.webp">
-                <textarea id="sql" class="form-control" rows="20" aria-label="scss">SELECT * FROM DIARY D
-JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
-FROM POSTS P
-JOIN USERS U ON P.USER_ID = U.ID
-GROUP BY P.DIARY_ID
-) PP ON D.ID = PP.DIARY_ID
-JOIN USERS U ON D.USER_ID = U.ID
-ORDER BY PP.PID DESC</textarea>
+                <div id="sql" style="height:400px;border:1px solid black;"></div>
             </div>
             <div class="col-6">
                 <table class="main"></table>
@@ -99,7 +99,22 @@ ORDER BY PP.PID DESC</textarea>
 <script>
     var num = {};
     var currAlias = [];
-    let sql = document.querySelector('#sql');
+    let sql = () => {
+        try {
+            return window?.monaco?.getValue() ?? '';
+        }
+        catch (e) {
+            return `SELECT * FROM DIARY D
+JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
+FROM POSTS P
+JOIN USERS U ON P.USER_ID = U.ID
+GROUP BY P.DIARY_ID
+) PP ON D.ID = PP.DIARY_ID
+JOIN USERS U ON D.USER_ID = U.ID
+ORDER BY PP.PID DESC
+            `;
+        }
+    }
     let main = document.querySelector('.main');
 
     let diary = {
@@ -180,18 +195,18 @@ ORDER BY PP.PID DESC</textarea>
         if (event.target.value == '1') {
             CURRENT = 1;
             document.querySelector('.sqlite').style.display = 'none'
-            document.querySelector('textarea').value = `SELECT * FROM DIARY D
+            window.monaco.setValue(`SELECT * FROM DIARY D
 JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
 FROM POSTS P
 JOIN USERS U ON P.USER_ID = U.ID
 GROUP BY P.DIARY_ID ) PP ON D.ID = PP.DIARY_ID
 JOIN USERS U ON D.USER_ID = U.ID
-ORDER BY PP.PID DESC`;
+ORDER BY PP.PID DESC`);
         } else {
             CURRENT = 2
 
             document.querySelector('.sqlite').style.display = 'block'
-            document.querySelector('textarea').value = `SELECT *
+            window.monaco.setValue(`SELECT *
 FROM iblock_elements el
          JOIN iblock_properties p on 1 = 1
     AND p.iblock_id IN (SELECT i.id
@@ -208,6 +223,7 @@ WHERE el.iblock_id IN (SELECT ib.id
                          AND (ib.left > gg.left OR ib.left = gg.left)
                          AND (ib.right < gg.right OR ib.right = gg.right))
 `
+            )
         }
         table();
         run();
@@ -244,7 +260,7 @@ WHERE el.iblock_id IN (SELECT ib.id
     let mainfn = (num) => {
 
         let a = performance.now();
-        let res = (mysql.query(` ${sql.value} `));
+        let res = (mysql.query(` ${sql()} `));
         let b = performance.now();
         if (CURRENT == 2) {
             let sqlite = 0;
@@ -254,7 +270,7 @@ WHERE el.iblock_id IN (SELECT ib.id
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    sql: sql.value
+                    sql: sql()
                 })
             })
                 .then(response => {
@@ -330,23 +346,29 @@ WHERE el.iblock_id IN (SELECT ib.id
 
     }
     run()
-    document.addEventListener("DOMContentLoaded", mainfn());
+    document.addEventListener("DOMContentLoaded", () => {
 
-    document.querySelector('#sql').addEventListener('keydown', function (e) {
-        if (e.key == 'Tab') {
-            e.preventDefault();
-            var start = this.selectionStart;
-            var end = this.selectionEnd;
+        window.monaco = monaco.editor.create(document.getElementById('sql'), {
+            value: `SELECT * FROM DIARY D
+JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
+FROM POSTS P
+JOIN USERS U ON P.USER_ID = U.ID
+GROUP BY P.DIARY_ID
+) PP ON D.ID = PP.DIARY_ID
+JOIN USERS U ON D.USER_ID = U.ID
+ORDER BY PP.PID DESC
+        `,
+            language: 'sql',
+            theme: 'vs-white',
+            minimap: { enabled: false },
 
-            // set textarea value to: text before caret + tab + text after caret
-            this.value = this.value.substring(0, start) +
-                "\t" + this.value.substring(end);
+        });
+        setTimeout(() => {
+            mainfn();
 
-            // put caret at right position again
-            this.selectionStart =
-                this.selectionEnd = start + 1;
-        }
+        }, 0)
     });
+
 
 </script>
 
