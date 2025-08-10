@@ -208,20 +208,24 @@ ORDER BY PP.PID DESC`);
             document.querySelector('.sqlite').style.display = 'block'
             window.monaco.setValue(`SELECT *
 FROM iblock_elements el
-         JOIN iblock_properties p on 1 = 1
-    AND p.iblock_id IN (SELECT i.id
-                        FROM iblocks i
-                                 JOIN iblocks ic on 1 = 1 AND ic.id = el.iblock_id
-                        WHERE 1 = 1
-                          AND (i.left < ic.left OR i.left = ic.left)
-                          AND (i.right > ic.right OR i.right = ic.right))
-         JOIN iblock_prop_values pv on pv.prop_id = p.id AND pv.el_id = el.id
-WHERE el.iblock_id IN (SELECT ib.id
-                       FROM iblocks ib
-                                JOIN (SELECT * FROM iblocks b where b.id = 2) gg on 1 = 1
-                       WHERE 1 = 1
-                         AND (ib.left > gg.left OR ib.left = gg.left)
-                         AND (ib.right < gg.right OR ib.right = gg.right))
+        JOIN iblock_properties p on 1 = 1
+            AND p.iblock_id IN 
+                (SELECT i.id
+                    FROM iblocks i
+                        JOIN iblocks ic on 1 = 1 AND ic.id = el.iblock_id
+                    WHERE 1 = 1
+                        AND (i.left < ic.left OR i.left = ic.left)
+                        AND (i.right > ic.right OR i.right = ic.right)
+                )
+        JOIN iblock_prop_values pv on pv.prop_id = p.id 
+            AND pv.el_id = el.id
+WHERE el.iblock_id IN 
+        (SELECT ib.id
+         FROM iblocks ib
+         JOIN (SELECT * FROM iblocks b where b.id = 2) gg on 1 = 1
+         WHERE 1 = 1
+               AND (ib.left > gg.left OR ib.left = gg.left)
+               AND (ib.right < gg.right OR ib.right = gg.right))
 `
             )
         }
