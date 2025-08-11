@@ -104,13 +104,13 @@ sqlite(eav) output in console
             return window?.monaco?.getValue() ?? '';
         }
         catch (e) {
-            return `SELECT * FROM DIARY D
-JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
-FROM POSTS P
-JOIN USERS U ON P.USER_ID = U.ID
-GROUP BY P.DIARY_ID
-) PP ON D.ID = PP.DIARY_ID
-JOIN USERS U ON D.USER_ID = U.ID
+            return `SELECT *
+FROM DIARY D
+         JOIN (SELECT P.DIARY_ID, MAX(P.ID) AS PID
+               FROM POSTS P
+                        JOIN USERS U ON P.USER_ID = U.ID
+               GROUP BY P.DIARY_ID) PP ON D.ID = PP.DIARY_ID
+         JOIN USERS U ON D.USER_ID = U.ID
 ORDER BY PP.PID DESC
             `;
         }
@@ -195,12 +195,13 @@ ORDER BY PP.PID DESC
         if (event.target.value == '1') {
             CURRENT = 1;
             document.querySelector('.sqlite').style.display = 'none'
-            window.monaco.setValue(`SELECT * FROM DIARY D
-JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
-FROM POSTS P
-JOIN USERS U ON P.USER_ID = U.ID
-GROUP BY P.DIARY_ID ) PP ON D.ID = PP.DIARY_ID
-JOIN USERS U ON D.USER_ID = U.ID
+            window.monaco.setValue(`SELECT *
+FROM DIARY D
+         JOIN (SELECT P.DIARY_ID, MAX(P.ID) AS PID
+               FROM POSTS P
+                        JOIN USERS U ON P.USER_ID = U.ID
+               GROUP BY P.DIARY_ID) PP ON D.ID = PP.DIARY_ID
+         JOIN USERS U ON D.USER_ID = U.ID
 ORDER BY PP.PID DESC`);
         } else {
             CURRENT = 2
@@ -353,13 +354,13 @@ WHERE el.iblock_id IN
     document.addEventListener("DOMContentLoaded", () => {
 
         window.monaco = monaco.editor.create(document.getElementById('sql'), {
-            value: `SELECT * FROM DIARY D
-JOIN ( SELECT P.DIARY_ID, MAX(P.ID) AS PID
-FROM POSTS P
-JOIN USERS U ON P.USER_ID = U.ID
-GROUP BY P.DIARY_ID
-) PP ON D.ID = PP.DIARY_ID
-JOIN USERS U ON D.USER_ID = U.ID
+            value: `SELECT *
+FROM DIARY D
+         JOIN (SELECT P.DIARY_ID, MAX(P.ID) AS PID
+               FROM POSTS P
+                        JOIN USERS U ON P.USER_ID = U.ID
+               GROUP BY P.DIARY_ID) PP ON D.ID = PP.DIARY_ID
+         JOIN USERS U ON D.USER_ID = U.ID
 ORDER BY PP.PID DESC
         `,
             language: 'sql',
